@@ -5,7 +5,7 @@ export const RES_KEYS: ResKey[] = ['silver', 'wood', 'aether'];
 export const RES_NAMES: Record<ResKey, string> = { silver: 'Prata', wood: 'Madeira', aether: 'Éter' };
 export type Cost = { silver?: number; wood?: number; aether?: number };
 
-export type FactionId = 'valmir' | 'kragg' | 'veymar' | 'durn';
+export type FactionId = 'valmir' | 'kragg' | 'veymar' | 'durn' | 'salinos';
 export type ArmorType = 'light' | 'medium' | 'heavy' | 'fortified' | 'hero' | 'none';
 export type DmgType = 'blade' | 'pierce' | 'siege' | 'arcane' | 'hero' | 'chaos';
 export type UnitClass =
@@ -176,6 +176,8 @@ export interface ItemDef {
 }
 
 export interface FactionDef {
+  /** lema curto mostrado na tela inicial */
+  motto?: string;
   id: FactionId;
   name: string;
   people: string;

@@ -575,6 +575,24 @@ const neutralBuildings: BuildingDef[] = [
 ];
 
 // ---------------------------------------------------------------------------
+// Salinos (povo do mar): por ora reaproveitam a mecânica dos Humanos com ids
+// próprios (s_*). Quando a arte e o equilíbrio próprios chegarem, viram dados à parte.
+// ---------------------------------------------------------------------------
+const HUMAN_IDS = new Set<string>([
+  ...valmirUnits.map((u) => u.id), ...valmirBuildings.map((b) => b.id),
+  ...Object.keys(RESEARCHES).filter((k) => k.startsWith('v_')),
+]);
+function toSalinos<T>(v: T): T {
+  if (typeof v === 'string') return (HUMAN_IDS.has(v) ? 's_' + v.slice(2) : v === 'valmir' ? 'salinos' : v) as T;
+  if (Array.isArray(v)) return v.map(toSalinos) as T;
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, toSalinos(x)])) as T;
+  return v;
+}
+const salinosUnits: UnitDef[] = valmirUnits.map(toSalinos);
+const salinosBuildings: BuildingDef[] = valmirBuildings.map(toSalinos);
+for (const k of Object.keys(RESEARCHES)) if (k.startsWith('v_')) { const r = toSalinos(RESEARCHES[k]); RESEARCHES[r.id] = r; }
+
+// ---------------------------------------------------------------------------
 // Facções
 // ---------------------------------------------------------------------------
 export const FACTIONS: Record<FactionId, FactionDef> = {
@@ -623,6 +641,21 @@ export const FACTIONS: Record<FactionId, FactionDef> = {
       core: ['y_bosque', 'y_raiz', 'y_ambar', 'y_santuario', 'y_jardim', 'y_casulario'],
     },
   },
+  salinos: {
+    id: 'salinos', name: 'Salinos', people: 'Salinos', biome: 0,
+    desc: 'Povos do mar que vieram habitar a terra, trazendo cultura, força e conhecimento das profundezas.',
+    lore: 'São adaptáveis e dominam tanto o ambiente marinho quanto o terrestre.',
+    traits: ['Trabalhadores somam esforços na construção', 'Construções resistentes', 'Guerreiros e montarias de choque'],
+    worker: 's_lavrador', hall: 's_paco', hero: 's_marechal', houses: 's_casa',
+    units: salinosUnits.map((u) => u.id), buildings: salinosBuildings.map((b) => b.id),
+    researches: Object.keys(RESEARCHES).filter((k) => k.startsWith('s_')),
+    trainMul: 1, builderMode: 'build',
+    ai: {
+      comp: { melee: 0.4, ranged: 0.3, cavalry: 0.12, caster: 0.08, siege: 0.06, air: 0.04 },
+      antiAir: ['s_besteiro', 's_falcoeiro'], siege: ['s_trabuco'],
+      core: ['s_quartel', 's_serraria', 's_forja', 's_santuario', 's_oficina', 's_aviario'],
+    },
+  },
   durn: {
     id: 'durn', name: 'Forjas de Durn', people: 'Durnianos', biome: 3,
     desc: 'Engenheiros anões das alturas nevadas. Tecnologia, artilharia e máquinas de guerra.',
@@ -642,10 +675,11 @@ export const FACTIONS: Record<FactionId, FactionDef> = {
 
 export const UNITS: Record<string, UnitDef> = {};
 export const BUILDINGS: Record<string, BuildingDef> = {};
-for (const u of [...valmirUnits, ...kraggUnits, ...veymarUnits, ...durnUnits, ...neutralUnits]) UNITS[u.id] = u;
-for (const b of [...valmirBuildings, ...kraggBuildings, ...veymarBuildings, ...durnBuildings, ...neutralBuildings]) BUILDINGS[b.id] = b;
+for (const u of [...valmirUnits, ...kraggUnits, ...veymarUnits, ...durnUnits, ...salinosUnits, ...neutralUnits]) UNITS[u.id] = u;
+for (const b of [...valmirBuildings, ...kraggBuildings, ...veymarBuildings, ...durnBuildings, ...salinosBuildings, ...neutralBuildings]) BUILDINGS[b.id] = b;
 
-export const FACTION_IDS: FactionId[] = ['valmir', 'kragg', 'veymar', 'durn'];
+// ordem de exibição: Humanos, Naveos, Vitraneos, Necros, Salinos
+export const FACTION_IDS: FactionId[] = ['valmir', 'veymar', 'durn', 'kragg', 'salinos'];
 
 /** Edifício base de uma linha de evolução (ex.: v_cidadela -> v_paco). */
 export function baseOf(id: string): string {
@@ -665,3 +699,57 @@ export function satisfies(have: string, need: string): boolean {
   void cur;
   return false;
 }
+
+// ---------------------------------------------------------------------------
+// Lore das cinco facções (nomes, lemas e nomes das unidades/construções).
+// A mecânica continua nas definições acima; aqui só a identidade de cada povo.
+// ---------------------------------------------------------------------------
+const LORE: Record<FactionId, { name: string; motto: string; desc: string; names: Record<string, string> }> = {
+  valmir: {
+    name: 'Humanos', motto: 'Equilíbrio, adaptabilidade e expansão.',
+    desc: 'Povos versáteis, organizados e ambiciosos. Dominaram a arte da construção e da diplomacia, adaptando-se a qualquer ambiente.',
+    names: { v_lavrador: 'Trabalhador', v_lanceiro: 'Soldado', v_besteiro: 'Arqueiro', v_cavaleiro: 'Cavaleiro', v_cleriga: 'Sacerdote',
+      v_paco: 'Centro da Vila', v_quartel: 'Quartel', v_torre: 'Torre', v_santuario: 'Templo' },
+  },
+  veymar: {
+    name: 'Naveos', motto: 'Conhecimento, tecnologia e evolução.',
+    desc: 'Alienígenas humanoides que trazem consigo tecnologias avançadas e uma visão de mundo diferente, buscando compreender e moldar os novos territórios.',
+    names: { y_lanterneiro: 'Trabalhador', y_arqueira: 'Sentinela', y_anciao: 'Lanceiro', y_guardiao: 'Guardião', y_invocadora: 'Oráculo',
+      y_arvore_mae: 'Núcleo', y_ambar: 'Forja', y_vigia: 'Torre Arcana', y_santuario: 'Portal' },
+  },
+  durn: {
+    name: 'Vitraneos', motto: 'Beleza, precisão e pureza.',
+    desc: 'Povos feitos de vidro e porcelana, que unem arte e guerra. Valorizam a harmonia, a forma e a perfeição, mas são extremamente letais quando provocados.',
+    names: { d_mineiro: 'Trabalhador', d_couracado: 'Lâmina', d_arcabuzeiro: 'Atirador', d_golem: 'Sentinela', d_mecanico: 'Alquimista',
+      d_salao: 'Núcleo Cristal', d_oficina: 'Oficina', d_torre: 'Torre Prismática', d_fundicao: 'Santuário' },
+  },
+  kragg: {
+    name: 'Necros', motto: 'Sombras, controle e eternidade.',
+    desc: 'Povos das sombras que dominam a morte e a energia espiritual. Não temem a perda, pois acreditam que tudo faz parte de um ciclo maior.',
+    names: { k_carregador: 'Trabalhador', k_arremessador: 'Espectral', k_brutamonte: 'Guerreiro', k_javali: 'Ceifador', k_xama: 'Névoa',
+      k_fogueira: 'Necrópole', k_circulo: 'Altar', k_torre: 'Torre Sombria', k_arena: 'Portal' },
+  },
+  salinos: {
+    name: 'Salinos', motto: 'Mar, adaptação e resistência.',
+    desc: 'Povos do mar que vieram habitar a terra, trazendo sua cultura, força e conhecimento das profundezas. São adaptáveis e dominam tanto o ambiente marinho quanto o terrestre.',
+    names: { s_lavrador: 'Trabalhador', s_lanceiro: 'Guerreiro', s_besteiro: 'Arpoador', s_cavaleiro: 'Montaria', s_cleriga: 'Sacerdote',
+      s_paco: 'Concha Central', s_serraria: 'Doca', s_torre: 'Torre das Marés', s_santuario: 'Templo' },
+  },
+};
+for (const id of FACTION_IDS) {
+  const l = LORE[id];
+  Object.assign(FACTIONS[id], { name: l.name, people: l.name, motto: l.motto, desc: l.desc, lore: l.desc });
+  for (const [k, n] of Object.entries(l.names)) {
+    if (UNITS[k]) UNITS[k].name = n;
+    else if (BUILDINGS[k]) BUILDINGS[k].name = n;
+    else throw new Error(`lore: id desconhecido ${k}`);
+  }
+}
+
+/** Unidades e construções de destaque de cada povo (tela inicial). */
+export const FACTION_SHOWCASE: Record<FactionId, { units: string[]; buildings: string[] }> = Object.fromEntries(
+  FACTION_IDS.map((id) => {
+    const keys = Object.keys(LORE[id].names);
+    return [id, { units: keys.filter((k) => UNITS[k]), buildings: keys.filter((k) => BUILDINGS[k]) }];
+  }),
+) as Record<FactionId, { units: string[]; buildings: string[] }>;

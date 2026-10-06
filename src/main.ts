@@ -5,6 +5,7 @@ import './styles/buildings.css';
 import './styles/ui.css';
 import './styles/sprites.css';
 import './styles/hud.css';
+import './styles/front.css';
 import { FACTIONS, FACTION_IDS } from './data/factions';
 import { MAPS } from './world/mapgen';
 import { PLAYER_COLORS } from './sim/entity';
@@ -53,7 +54,7 @@ function frontPage() {
     <div class="match-fields"><label>Campo de batalha<select id="map">${options(MAPS.map(m => [m.id, m.name]), mapId)}</select></label><label>Dificuldade<select id="difficulty">${options([['facil','Fácil'],['normal','Normal'],['dificil','Difícil']], 'normal')}</select></label><label>Qualidade visual<select id="quality">${options([['alta','Alta'],['media','Média'],['baixa','Baixa']], quality)}</select></label></div>
     <p class="map-desc"></p><div class="roster"></div><p class="setup-error" role="alert"></p>
     <footer class="setup-actions"><button id="load" ${listSaves().length ? '' : 'disabled'}>Continuar partida</button><button id="guide">Como jogar</button><button class="primary" id="start">Iniciar conquista <span>→</span></button></footer>
-    </main><div class="front-foot">ESTRATÉGIA EM TEMPO REAL <span>•</span> QUATRO POVOS, UM CONTINENTE</div><div class="front-modal"></div>`;
+    </main><div class="front-foot">ESTRATÉGIA EM TEMPO REAL <span>•</span> CINCO POVOS, UM CONTINENTE</div><div class="front-modal"></div>`;
   const fillRoster = () => {
     const map = MAPS.find(m => m.id === mapId)!;
     app.querySelector('.map-desc')!.textContent = map.desc;

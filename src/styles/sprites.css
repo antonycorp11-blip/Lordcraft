@@ -146,3 +146,5 @@
 
 /* Sede do reino: desenhada além da própria área (mais alta e mais larga), como um castelo */
 .bd.sprite-b.a-hall .st{inset:-26% -12% 0 -12%}
+/* Salinos: enquanto não há arte própria, usam a linha dos Naveos nos atlases */
+.bd.sprite-b.f-salinos{--building-row:66.667%}.u.sprite-u.f-salinos{--sprite-row:66.667%}

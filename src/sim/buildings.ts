@@ -12,7 +12,7 @@ export function updateBuilding(g: Game, b: Entity, dt: number) {
     const grow = !p || FACTIONS[p.faction].builderMode === 'grow';
     let rate = 0;
     if (grow) rate = 1;
-    else if (b.builders > 0) rate = p.faction === 'valmir' ? 1 + 0.6 * (b.builders - 1) : 1;
+    else if (b.builders > 0) rate = p.faction === 'valmir' || p.faction === 'salinos' ? 1 + 0.6 * (b.builders - 1) : 1;
     b.buildersLast = b.builders;
     b.builders = 0;
     if (rate > 0) {
