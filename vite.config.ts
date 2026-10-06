@@ -1,9 +1,9 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  // caminhos relativos: o build funciona na raiz do domínio ou numa subpasta (ex.: GitHub Pages)
+  // caminhos relativos: o build funciona na raiz do domínio ou numa subpasta
   base: './',
   server: { port: 8765, host: '127.0.0.1' },
   build: { target: 'es2022', sourcemap: true },
   test: { environment: 'node', testTimeout: 120000 },
-} as any);
+});
