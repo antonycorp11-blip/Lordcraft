@@ -1,0 +1,1127 @@
+/* hud.css — Interface da partida. Limpa e pensada primeiro para o celular:
+   o mapa ocupa a tela toda e a interface flutua por cima em "vidro" escuro.
+   Nada de texturas, desfoques ou sombras borradas: o HUD precisa ser leve.
+
+   Cantos da tela:
+     sup. esquerdo  recursos (pílula)          sup. direito  botões redondos
+     lateral esq.   trabalhador ocioso, exército, heróis
+     inf. esquerdo  minimapa                    inf. direito  comandos (zona do polegar)
+     acima deles    cartão da seleção (só quando há algo selecionado) */
+
+:root {
+  --top: 0px;
+  --bottom: 0px;
+}
+
+.playing {
+  position: relative;
+  user-select: none;
+}
+
+.hud {
+  --glass: rgb(12 19 17 / 0.82);
+  --glass-hi: rgb(255 255 255 / 0.07);
+  --edge: rgb(232 206 140 / 0.3);
+  --gold: #f0d48e;
+  --ink: #eee6cd;
+  --dim: #9fb0a3;
+  --gap: 10px;
+  --btn: 50px;
+  --mm: 172px;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  color: var(--ink);
+  font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.hud button,
+.hud select,
+.hud input,
+.hud .minimap,
+.hud .info,
+.hud .cmds,
+.hud .hud-top {
+  pointer-events: auto;
+}
+
+/* Superfície de vidro comum */
+.hud-top,
+.mm-wrap,
+.info,
+.cmds,
+.tooltip,
+.toast,
+.msg,
+.placebar,
+.modebar {
+  background: var(--glass);
+  border: 1px solid var(--edge);
+}
+
+/* Desempenho: cada bloco do HUD vira uma camada própria. Assim o mapa mudando por
+   baixo não obriga o navegador a repintar o HUD (e sem sombras borradas, que são caras). */
+.hud-top,
+.topbtns,
+.side,
+.touchbar,
+.groupsbar,
+.mm-wrap,
+.info,
+.cmds {
+  will-change: transform;
+  contain: layout paint;
+}
+
+/* contadores destes atalhos ficam de propósito um pouco para fora do botão */
+.side,
+.groupsbar {
+  contain: layout;
+}
+
+/* Botão redondo comum */
+.hud .tb,
+.hud .sb,
+.hud .cb,
+.hud .touchbar button,
+.hud .groupsbar button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+  background: var(--glass);
+  color: var(--ink);
+  transition: transform 0.08s, border-color 0.12s, background-color 0.12s;
+}
+
+.hud .tb:hover,
+.hud .sb:hover,
+.hud .cb:hover,
+.hud .touchbar button:hover,
+.hud .groupsbar button:hover {
+  border-color: var(--gold);
+  background-color: rgb(40 52 46 / 0.92);
+}
+
+.hud .tb:active,
+.hud .sb:active,
+.hud .cb:active,
+.hud .touchbar button:active {
+  transform: scale(0.94);
+}
+
+/* ---------- Recursos ---------- */
+.hud-top {
+  position: absolute;
+  top: var(--gap);
+  left: var(--gap);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 16px 6px 10px;
+  border-radius: 999px;
+}
+
+.hud-top .resbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hud-top .r {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.hud-top .r .ico {
+  scale: 0.8;
+}
+
+.hud-top .r b {
+  font-weight: 650;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-top .r.warn b {
+  color: #ff9c84;
+}
+
+/* soldo só aparece quando há cobrança */
+.hud-top .r-upkeep:not(.on) {
+  display: none;
+}
+
+.hud-top .r-upkeep b {
+  color: #ffb98f;
+  font-size: 12px;
+}
+
+.clock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 14px;
+  border-left: 1px solid var(--edge);
+  color: var(--dim);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.clock .sun {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f3d77e 50%, #3b4f63 50%);
+}
+
+/* ---------- Botões do canto superior direito ---------- */
+.topbtns {
+  position: absolute;
+  top: var(--gap);
+  right: var(--gap);
+  display: flex;
+  gap: 8px;
+}
+
+.hud .tb {
+  width: 40px;
+  height: 40px;
+}
+
+.hud .tb span:not(.spd) {
+  display: none;
+}
+
+.hud .tb .spd {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.hud .tb .ico {
+  scale: 0.8;
+}
+
+/* ---------- Coluna lateral (atalhos) ---------- */
+.side {
+  position: absolute;
+  left: var(--gap);
+  top: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud .sb {
+  width: 44px;
+  height: 44px;
+}
+
+.hud .sb .ico {
+  scale: 0.8;
+}
+
+.hud .sb b {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--gold);
+  color: #1b1a12;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* esconde atalhos sem uso (ninguém ocioso, nenhum soldado) */
+.hud .sb.idle:not(.has),
+.hud .sb.army:not(.has) {
+  display: none;
+}
+
+.hud .sb.idle.has {
+  border-color: var(--gold);
+}
+
+.heroes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud .hero-b {
+  width: 50px;
+  height: 50px;
+  overflow: hidden;
+  background-size: 100% 100%, 400%;
+}
+
+.hud .hero-b em {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  translate: -50% 0;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--gold);
+  text-shadow: 0 1px 2px #000;
+}
+
+.hud .hero-b u {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #1b1a12;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 16px;
+  text-decoration: none;
+}
+
+.hud .hero-b .hbar {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 14px;
+  height: 3px;
+}
+
+/* ---------- Barra inferior: minimapa · seleção · comandos ---------- */
+.hud-bottom {
+  position: absolute;
+  left: var(--gap);
+  right: var(--gap);
+  bottom: var(--gap);
+  display: flex;
+  align-items: flex-end;
+  gap: var(--gap);
+  pointer-events: none;
+}
+
+.mm-wrap {
+  flex: none;
+  width: var(--mm);
+  height: var(--mm);
+  padding: 4px;
+  border-radius: 14px;
+}
+
+.mm-slot {
+  width: 100%;
+  height: 100%;
+}
+
+.minimap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #09120e;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.minimap svg,
+.mm-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hud.hide-mm .mm-wrap {
+  display: none;
+}
+
+/* Cartão da seleção */
+.info {
+  flex: 0 1 420px;
+  min-width: 0;
+  max-height: 210px;
+  overflow: auto;
+  padding: 10px 12px;
+  border-radius: 16px;
+  scrollbar-width: none;
+}
+
+.hud.nosel .info {
+  visibility: hidden;
+}
+
+.info-in {
+  font-size: 12px;
+}
+
+.single {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.por {
+  position: relative;
+  flex: none;
+  width: 60px;
+  height: 60px;
+  overflow: hidden;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #3c5446, #15231d 72%);
+}
+
+.por .portrait.u {
+  top: 94% !important;
+}
+
+.por .portrait.sa {
+  scale: 0.55;
+}
+
+.por .portrait.u .fig {
+  --s: 1.25;
+}
+
+.por .portrait.bd {
+  transform: translate(-50%, -50%) scale(0.42) !important;
+  top: 50% !important;
+}
+
+.por > .ico {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+.det {
+  flex: 1;
+  min-width: 0;
+}
+
+.det h3 {
+  margin: 0;
+  font: 600 15px/1.2 Georgia, 'Times New Roman', serif;
+  color: var(--gold);
+}
+
+.det .sub {
+  margin: 1px 0 6px;
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.det .hint {
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.det .big {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.bars {
+  display: grid;
+  gap: 3px;
+  max-width: 260px;
+}
+
+.bar,
+.xp {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: rgb(0 0 0 / 0.5);
+}
+
+.bar b,
+.xp b,
+.hbar b,
+.qp b {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  border-radius: inherit;
+  background: #8fcf5f;
+}
+
+.bar b.lo,
+.hbar b.lo {
+  background: #e7775f;
+}
+
+.bar.mp b {
+  background: #6fb4e2;
+}
+
+.bar.prog b,
+.xp b {
+  background: var(--gold);
+}
+
+.bar span,
+.xp span {
+  position: absolute;
+  right: 0;
+  top: -15px;
+  font-size: 10px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.bar.prog,
+.xp {
+  margin-top: 16px;
+}
+
+.bar.prog span,
+.xp span {
+  left: 0;
+  right: auto;
+}
+
+.bars .bar.hp {
+  margin-top: 0;
+}
+
+.bars .bar.hp span {
+  display: none;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 8px;
+  color: var(--dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.stats .ico {
+  scale: 0.55;
+  margin: -4px;
+}
+
+.ord {
+  margin: 6px 0 0;
+  color: var(--dim);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.buffs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.bf {
+  padding: 1px 7px;
+  border-radius: 9px;
+  background: var(--glass-hi);
+  font-size: 10px;
+  font-style: normal;
+}
+
+.queue,
+.inv {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.hud .qi,
+.hud .slot {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+  background: var(--glass-hi);
+}
+
+.hud .qi.act {
+  border-color: var(--gold);
+}
+
+.qi .portrait.sa {
+  scale: 0.3;
+}
+
+.qi .portrait.u {
+  top: 92% !important;
+}
+
+.qi .ico,
+.slot .ico {
+  scale: 0.7;
+}
+
+.qp,
+.hbar {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 3px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgb(0 0 0 / 0.6);
+}
+
+.warn {
+  margin-top: 6px;
+  color: #ff9c84;
+  font-size: 11px;
+}
+
+/* Seleção múltipla */
+.multi .mh {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.multi .mh b {
+  color: var(--gold);
+}
+
+.filters {
+  display: flex;
+  gap: 4px;
+}
+
+.hud .filters button {
+  padding: 3px 9px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 11px;
+}
+
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hud .ut {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #3c5446, #15231d 72%);
+}
+
+.hud .ut.act {
+  border-color: var(--gold);
+}
+
+.ut .portrait.sa {
+  scale: 0.36;
+}
+
+.ut .portrait.u {
+  top: 92% !important;
+}
+
+.ut em,
+.cb em {
+  position: absolute;
+  right: 2px;
+  top: 1px;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--gold);
+  text-shadow: 0 1px 2px #000;
+}
+
+/* Comandos */
+.cmds {
+  flex: none;
+  margin-left: auto;
+  padding: 8px;
+  border-radius: 18px;
+}
+
+.hud.nocmd .cmds {
+  visibility: hidden;
+}
+
+.form {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.form[hidden] {
+  display: none;
+}
+
+.hud .form button {
+  flex: 1;
+  padding: 3px 6px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dim);
+  font-size: 11px;
+}
+
+.hud .form button.on {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.cmds .grid {
+  display: grid;
+  grid-template-columns: repeat(4, var(--btn));
+  gap: 8px;
+  max-height: calc(var(--btn) * 3 + 16px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.hud .cb {
+  width: var(--btn);
+  height: var(--btn);
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, #2f4339, #142019 75%);
+}
+
+.hud .cb .lbl {
+  display: none;
+}
+
+.hud .cb kbd {
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  translate: -50% 0;
+  padding: 0 3px;
+  border: 0;
+  background: none;
+  color: var(--dim);
+  font: 600 9px system-ui, sans-serif;
+}
+
+.hud .cb.dis {
+  opacity: 0.45;
+}
+
+.hud .cb.act {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgb(240 212 142 / 0.35);
+}
+
+.hud .cb.auto {
+  box-shadow: inset 0 0 0 2px #9fd47a;
+}
+
+.cb .portrait.sa {
+  scale: 0.36;
+}
+
+.cb .portrait.u {
+  top: 86% !important;
+}
+
+.cb .portrait.u .fig {
+  --s: 0.95;
+}
+
+.cb .portrait.bd {
+  top: 46% !important;
+  transform: translate(-50%, -50%) scale(0.33) !important;
+}
+
+.cb > .ico {
+  scale: 0.85;
+}
+
+/* ---------- Grupos de controle (só aparecem se existirem) ---------- */
+.groupsbar {
+  position: absolute;
+  left: calc(var(--gap) + var(--mm) + var(--gap));
+  bottom: calc(var(--gap) + 220px);
+  display: flex;
+  gap: 6px;
+}
+
+.hud .groupsbar button {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.groupsbar b {
+  position: absolute;
+  right: -3px;
+  top: -3px;
+  font-size: 9px;
+  color: var(--gold);
+}
+
+.gset {
+  display: flex;
+  gap: 4px;
+}
+
+.hud .groupsbar .set {
+  border-style: dashed;
+  color: var(--dim);
+}
+
+/* no toque, os atalhos para salvar grupos poluem a tela: fica só quem já existe */
+.touch .gset {
+  display: none;
+}
+
+/* ---------- Alternadores de toque (só em telas de toque) ---------- */
+.touchbar {
+  position: absolute;
+  right: var(--gap);
+  top: 60px;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.touch .touchbar {
+  display: flex;
+}
+
+.hud .touchbar button {
+  width: 40px;
+  height: 40px;
+}
+
+.hud .touchbar button.on {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.hud .touchbar .ico {
+  scale: 0.75;
+}
+
+/* ---------- Avisos, mensagens e dicas ---------- */
+.toasts {
+  position: absolute;
+  top: 62px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: min(520px, 80vw);
+}
+
+.toast {
+  padding: 7px 16px;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 12px;
+  text-align: center;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: toast-in 0.25s ease-out;
+}
+
+.toast.attack {
+  border-color: #e7775f;
+  color: #ffc1ad;
+}
+
+.toast.fb {
+  color: var(--dim);
+}
+
+.msgs {
+  position: absolute;
+  left: calc(var(--gap) + 54px);
+  top: 64px;
+  display: grid;
+  gap: 5px;
+  max-width: 340px;
+}
+
+.msg {
+  padding: 5px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 60;
+  display: none;
+  width: 260px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  pointer-events: none;
+  font-size: 12px;
+}
+
+.tooltip b {
+  color: var(--gold);
+  font-size: 13px;
+}
+
+.tooltip p {
+  margin-top: 6px;
+  color: var(--dim);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.tooltip .cost {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.tooltip .cost span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.tooltip .cost .ico {
+  scale: 0.6;
+  margin: -4px;
+}
+
+/* Barra de construir / modo de ordem */
+.placebar,
+.modebar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--gap) + 74px);
+  translate: -50% 0;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  pointer-events: auto;
+}
+
+.placebar.on,
+.modebar.on {
+  display: flex;
+}
+
+.modebar span {
+  padding: 0 8px;
+  color: var(--dim);
+  font-size: 12px;
+}
+
+.hud .placebar button,
+.hud .modebar button {
+  padding: 8px 16px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: var(--glass-hi);
+  font-size: 12px;
+}
+
+.hud .placebar button[data-p='ok'] {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Diálogo do menu dentro da partida */
+.hud .modal .dlg {
+  border: 1px solid var(--edge);
+  border-radius: 18px;
+  background: #101a16;
+}
+
+/* ---------- Celular ---------- */
+@media (max-width: 620px), (pointer: coarse) and (max-width: 900px) {
+  .hud {
+    --gap: 8px;
+    --btn: 46px;
+    --mm: 108px;
+    font-size: 12px;
+  }
+
+  .hud-top {
+    gap: 10px;
+    padding: 5px 12px 5px 8px;
+    max-width: calc(100vw - 2 * var(--gap) - 96px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .hud-top .resbar {
+    gap: 10px;
+  }
+
+  .hud-top .r b {
+    font-size: 12px;
+  }
+
+  .hud-top .r .ico {
+    scale: 0.65;
+    margin: -3px;
+  }
+
+  .clock {
+    display: none;
+  }
+
+  .topbtns {
+    gap: 6px;
+  }
+
+  .hud .tb {
+    width: 36px;
+    height: 36px;
+  }
+
+  .hud .tb[data-a='speed'],
+  .hud .tb[data-a='diplo'] {
+    display: none;
+  }
+
+  .side {
+    top: 54px;
+  }
+
+  .hud .sb {
+    width: 40px;
+    height: 40px;
+  }
+
+  .hud .hero-b {
+    width: 44px;
+    height: 44px;
+  }
+
+  .touchbar {
+    top: 52px;
+  }
+
+  .hud-bottom {
+    flex-wrap: wrap;
+  }
+
+  .info {
+    order: -1;
+    flex: 1 1 100%;
+    max-height: 132px;
+    padding: 8px 10px;
+  }
+
+  .por {
+    width: 46px;
+    height: 46px;
+  }
+
+  .por .portrait.sa {
+    scale: 0.42;
+  }
+
+  .stats,
+  .ord,
+  .det .hint,
+  .buffs {
+    display: none;
+  }
+
+  .det h3 {
+    font-size: 14px;
+  }
+
+  .det .sub {
+    margin-bottom: 4px;
+  }
+
+  .cmds {
+    padding: 6px;
+    border-radius: 16px;
+  }
+
+  .cmds .grid {
+    gap: 6px;
+    max-height: calc(var(--btn) * 2 + 6px);
+  }
+
+  .hud .cb kbd {
+    display: none;
+  }
+
+  .groupsbar {
+    left: var(--gap);
+    bottom: auto;
+    top: 54px;
+    left: calc(var(--gap) + 48px);
+    flex-wrap: wrap;
+    max-width: 60vw;
+  }
+
+  .toasts {
+    top: 52px;
+  }
+
+  .toast {
+    font-size: 11px;
+  }
+
+  .msgs {
+    top: auto;
+    bottom: calc(var(--gap) + 250px);
+    left: var(--gap);
+    max-width: 80vw;
+  }
+
+  .placebar,
+  .modebar {
+    bottom: calc(var(--gap) + 190px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

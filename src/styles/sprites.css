@@ -1,0 +1,137 @@
+/* Atlases gerados para o campo de batalha. As camadas de seleção, neblina e
+   efeitos permanecem no DOM e independentes da arte. */
+.ground{background:#687657}
+.gtex{opacity:.11;background:radial-gradient(ellipse at 18% 38%,#bdc6a425,transparent 58%),radial-gradient(ellipse at 82% 68%,#203e3230,transparent 60%);background-size:311px 287px,431px 389px;mix-blend-mode:normal}
+.chunk.g .tb:not(.hi){background-image:url('../assets/terrain-atlas-v2.webp');background-size:400% 300%;background-repeat:no-repeat;box-shadow:0 0 11px 8px var(--terrain);-webkit-mask-image:radial-gradient(ellipse,#000 52%,#000c 67%,transparent 81%);mask-image:radial-gradient(ellipse,#000 52%,#000c 67%,transparent 81%)}
+.tb.t-grass{background-position:0 0}.tb.t-dirt{background-position:33.333% 0}.tb.t-moss{background-position:66.667% 0}.tb.t-ash{background-position:100% 0}
+.tb.t-snow{background-position:0 50%}.tb.t-water{background-position:33.333% 50%}.tb.t-shallow{background-position:66.667% 50%}.tb.t-sand{background-position:100% 50%}
+.tb.t-road{background-position:0 100%}.tb.t-rock{background-position:33.333% 100%}.tb.t-bridge{background-position:66.667% 100%}
+.tr:not(.stump),.rk,.cliff,.dc-pillar,.dc-arch,.dc-stones,.dc-bones{background-image:url('../assets/world-props.webp');background-size:400% 300%;background-repeat:no-repeat;border:0;clip-path:none}
+.tr:not(.stump){width:70px;height:70px;filter:drop-shadow(5px 8px 3px #0a241c99)}
+.tr:not(.stump):before,.tr:not(.stump):after{display:none}
+.tr.k0{--tree:0 0}.tr.k1{--tree:33.333% 0}.tr.k2{--tree:66.667% 0}.tr.k3{--tree:100% 0}
+.tr.stump{width:48px;height:48px;margin:24px 0 0 12px;background:url('../assets/world-props.webp') 100% 100% / 400% 300% no-repeat;filter:drop-shadow(2px 3px 2px #0a241c88);border:0}
+.rk{width:55px;height:55px;background-position:66.667% 50%}.cliff{width:42px;height:45px;background-position:100% 50%}
+.dc-pillar{background-position:0 100%}.dc-arch{background-position:33.333% 100%}.dc-stones,.dc-bones{background-position:66.667% 50%}
+.res .sprite-prop{inset:0;display:block;background:url('../assets/world-props.webp') no-repeat;background-size:400% 300%;filter:drop-shadow(5px 8px 3px #0a241c8c)}
+.res.mine .sprite-prop{background-position:0 50%}.res.crystal .sprite-prop{background-position:33.333% 50%;filter:drop-shadow(0 0 7px #62e5d391)}
+.res.mine .mound,.res.mine .cave,.res.mine .ore,.res.mine .beam,.res.crystal .cr{display:none}
+.res.l1 .sprite-prop{filter:grayscale(.5) brightness(.8)}
+.bd.sprite-b .st{background-image:var(--building-atlas);background-size:400% 400%;background-repeat:no-repeat;background-position:var(--building-col) var(--building-row);filter:drop-shadow(4px 7px 3px #0a221d99)}
+.bd.sprite-b .st>i{display:none}
+.bd.sprite-b .base{opacity:.35}
+.bd.sprite-b.a-hall{--building-atlas:url('../assets/buildings-core.webp');--building-col:0%}
+.bd.sprite-b.a-house{--building-atlas:url('../assets/buildings-core.webp');--building-col:33.333%}
+.bd.sprite-b.a-barracks{--building-atlas:url('../assets/buildings-core.webp');--building-col:66.667%}
+.bd.sprite-b.a-mill{--building-atlas:url('../assets/buildings-core.webp');--building-col:100%}
+.bd.sprite-b.a-forge{--building-atlas:url('../assets/buildings-tech.webp');--building-col:0%}
+.bd.sprite-b.a-temple{--building-atlas:url('../assets/buildings-tech.webp');--building-col:33.333%}
+.bd.sprite-b.a-workshop{--building-atlas:url('../assets/buildings-tech.webp');--building-col:66.667%}
+.bd.sprite-b.a-tower{--building-atlas:url('../assets/buildings-tech.webp');--building-col:100%}
+.bd.sprite-b.f-valmir{--building-row:0%}.bd.sprite-b.f-kragg{--building-row:33.333%}.bd.sprite-b.f-veymar{--building-row:66.667%}.bd.sprite-b.f-durn{--building-row:100%}
+.bd.sprite-b.busy .st{animation:building-breathe 2s ease-in-out infinite alternate}
+@keyframes building-breathe{to{filter:drop-shadow(4px 7px 3px #0a221d99) brightness(1.08)}}
+
+/* Cada linha representa um povo; as quatro colunas são repouso, duas passadas
+   e ação. O estado da simulação escolhe os quadros, sem criar timers por unidade. */
+.u .sprite-figure{display:none}
+.u.sprite-u .fig{display:none}
+.u.sprite-u .sprite-figure{position:absolute;display:block;width:52px;height:52px;left:-26px;top:-46px;background-image:var(--unit-atlas);background-size:400% 400%;background-repeat:no-repeat;background-position:0 var(--sprite-row);filter:drop-shadow(2px 4px 2px #0c21199c);transform:scale(var(--unit-scale,1));transform-origin:50% 85%;animation:sprite-idle 1.8s ease-in-out infinite alternate}
+.u.sprite-u.air .sprite-figure{top:-67px;filter:drop-shadow(3px 9px 3px #0c211966)}
+.u.sprite-u.fl .sprite-figure{transform:scale(calc(-1 * var(--unit-scale,1)),var(--unit-scale,1))}
+.u.sprite-u.f-valmir{--sprite-row:0%}.u.sprite-u.f-kragg{--sprite-row:33.333%}.u.sprite-u.f-veymar{--sprite-row:66.667%}.u.sprite-u.f-durn{--sprite-row:100%}
+.u.sprite-u.c-worker{--unit-atlas:url('../assets/anim-worker.webp')}.u.sprite-u.c-melee{--unit-atlas:url('../assets/anim-melee.webp')}.u.sprite-u.c-ranged{--unit-atlas:url('../assets/anim-ranged.webp')}.u.sprite-u.c-hero{--unit-atlas:url('../assets/anim-hero.webp')}
+.u.sprite-u.c-cavalry{--unit-atlas:url('../assets/anim-cavalry.webp')}.u.sprite-u.c-caster{--unit-atlas:url('../assets/anim-caster.webp')}.u.sprite-u.c-siege{--unit-atlas:url('../assets/anim-siege.webp')}.u.sprite-u.c-air{--unit-atlas:url('../assets/anim-air.webp')}
+.u.sprite-u.sp-neutral-common{--unit-atlas:url('../assets/anim-neutral-common.webp')}.u.sprite-u.sp-neutral-rare{--unit-atlas:url('../assets/anim-neutral-rare.webp')}.u.sprite-u.sp-special{--unit-atlas:url('../assets/anim-special.webp')}
+.u.sprite-u.sp-row-0{--sprite-row:0%}.u.sprite-u.sp-row-1{--sprite-row:33.333%}.u.sprite-u.sp-row-2{--sprite-row:66.667%}.u.sprite-u.sp-row-3{--sprite-row:100%}
+.u.sprite-u.sp-neutral-rare .sprite-figure{width:72px;left:-36px}
+.u.sprite-u.sp-special .sprite-figure{width:64px;height:48px;left:-32px}
+.u.sprite-u.s-walk .sprite-figure{animation:sprite-stride .38s steps(1,end) infinite}
+.u.sprite-u.s-atk1 .sprite-figure,.u.sprite-u.s-atk2 .sprite-figure,.u.sprite-u.s-cast .sprite-figure{background-position-x:100%;animation:sprite-strike .36s ease-out infinite}
+.u.sprite-u.s-work .sprite-figure{animation:sprite-work .7s steps(1,end) infinite}
+.u.sprite-u.s-die .sprite-figure{animation:sprite-fall .8s ease-out forwards}
+.u.sprite-u.stun .sprite-figure{animation:none}
+.u.sprite-u.summoned .sprite-figure{filter:drop-shadow(0 0 6px #a0e8d1)}
+.portrait.u.sprite-u .sprite-figure{width:96px;height:96px;left:-48px;top:-77px;background-position-x:0;animation:sprite-idle 2s ease-in-out infinite alternate}
+@keyframes sprite-idle{to{translate:0 -2px;rotate:1.4deg}}
+@keyframes sprite-stride{0%,49%{background-position-x:33.333%;translate:0 0}50%,100%{background-position-x:66.667%;translate:0 -2px}}
+@keyframes sprite-strike{0%{translate:0 0;scale:.96}45%{translate:3px -2px;scale:1.08}100%{translate:0 0;scale:1}}
+@keyframes sprite-work{0%,29%{background-position-x:0;translate:0 0}30%,69%{background-position-x:100%;translate:0 -2px}70%,100%{background-position-x:0;translate:0 0}}
+@keyframes sprite-fall{to{rotate:75deg;translate:10px 8px;opacity:0}}
+
+/* Folhas quadro a quadro (src/assets/sprites, geradas por tools/sprites). O renderizador
+   troca o background-position conforme o estado da simulação; tamanho e âncora vêm
+   do manifesto. Sem quadros próprios para um estado, cai no sprite antigo (sa-legacy). */
+.u .sprite-anim{display:none}
+.u.sa .sprite-anim{position:absolute;display:block;background-repeat:no-repeat;filter:drop-shadow(2px 4px 2px #0c21199c);pointer-events:none}
+.u.sa .sprite-figure,.u.sa .fig{display:none}
+.u.sa.sa-legacy .sprite-anim{display:none}
+.u.sa.sa-legacy .sprite-figure{display:block}
+.u.sa.sa-flip .sprite-anim{scale:-1 1}
+.u.sa.sa-carry .carry{display:none}
+.u.sa.sa-still.s-idle .sprite-anim{animation:sprite-breathe 2.4s ease-in-out infinite alternate}
+.u.sa.s-die .sprite-anim{animation:sprite-fall .8s ease-out forwards}
+.u.sa.summoned .sprite-anim{filter:drop-shadow(0 0 6px #a0e8d1)}
+.u.sa.fury .sprite-anim{filter:drop-shadow(0 0 4px #eec292) drop-shadow(2px 4px 2px #0c21199c)}
+.u.sa.slowed .sprite-anim{filter:sepia(.4) hue-rotate(100deg) drop-shadow(2px 4px 2px #0c21199c)}
+.u.sa .hp{top:-54px}.u.sa .mp{top:-49px}.u.sa .lvl{top:-54px}.u.sa .carry{top:-30px}
+.lod2 .u.sa .sprite-anim{filter:none}
+@keyframes sprite-breathe{to{translate:0 -1px;scale:1.012 .99}}
+.u.sa.sa-flip.sa-still.s-idle .sprite-anim{animation-name:sprite-breathe-fl}
+@keyframes sprite-breathe-fl{from{scale:-1 1}to{translate:0 -1px;scale:-1.012 .99}}
+/* Retratos com a arte animada: o elemento .portrait tem tamanho zero e fica nos pés,
+   então "scale" encolhe a figura sem tirá-la do chão. */
+.portrait.u.sa .sprite-anim{filter:drop-shadow(0 3px 3px #000a)}
+/* escalas por contexto (retrato, botão, fila...) ficam em hud.css */
+
+/* ---------- Vida no cenário ---------- */
+/* Árvores balançam ao vento (rotate soma com o scale das variações). Cada árvore
+   recebe uma fase própria no terrain.ts; durante a chuva o vento fica mais forte. */
+/* Vento: é o efeito mais caro do mapa (cada árvore repinta a cada quadro), então só
+   na qualidade Alta. Metade das árvores balança no vento normal; na tempestade, todas. */
+.q-high .tr.v0:not(.stump){animation:tree-sway 5.2s ease-in-out infinite alternate}
+.q-high .tr.v2:not(.stump){animation:tree-sway 6.1s ease-in-out infinite alternate}
+.q-high.raining .tr:not(.stump){animation:tree-storm 2.1s ease-in-out infinite alternate}
+.q-high.raining .tr.v1:not(.stump),.q-high.raining .tr.v3:not(.stump){animation-duration:2.6s}
+@keyframes tree-sway{0%{rotate:-1deg}100%{rotate:1.3deg}}
+@keyframes tree-storm{0%{rotate:-2.4deg}35%{rotate:1.2deg}60%{rotate:-.6deg}100%{rotate:3.2deg}}
+.far .tr,.q-low .tr,.lod2 .tr{animation:none}
+
+/* Fumaça de chaminé: quatro baforadas defasadas sobem, crescem e somem */
+.bd .smoke{display:none;position:absolute;left:var(--smoke-x);top:var(--smoke-y);width:0;height:0;z-index:2;pointer-events:none}
+.bd.sprite-b.a-house,.bd.sprite-b.a-mill,.bd.sprite-b.a-forge{--smoke-x:41%;--smoke-y:31%}
+.bd.sprite-b.a-mill{--smoke-x:73%;--smoke-y:27%}
+.bd.sprite-b.a-forge{--smoke-x:63%;--smoke-y:14%}
+.bd.sprite-b.a-house .smoke,.bd.sprite-b.a-mill .smoke,.bd.sprite-b.a-forge .smoke{display:block}
+.bd.c0 .smoke,.bd.c1 .smoke,.bd.c2 .smoke,.bd.dead .smoke{display:none}
+.bd .smoke b{position:absolute;left:-7px;top:-7px;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#e8e4dacc,#b9b3a666 55%,transparent 72%);opacity:0;animation:smoke-puff 3.6s linear infinite}
+.bd .smoke b:nth-child(2){animation-delay:-.9s}.bd .smoke b:nth-child(3){animation-delay:-1.8s}.bd .smoke b:nth-child(4){animation-delay:-2.7s}
+.bd.a-forge .smoke b{background:radial-gradient(circle at 40% 40%,#8e8a84cc,#4a474466 55%,transparent 72%)}
+.bd.busy .smoke b{animation-duration:2.4s}
+.raining .bd .smoke b{animation-name:smoke-puff-wind}
+@keyframes smoke-puff{0%{opacity:0;translate:0 0;scale:.4}12%{opacity:.85}100%{opacity:0;translate:10px -46px;scale:2.6}}
+@keyframes smoke-puff-wind{0%{opacity:0;translate:0 0;scale:.4}12%{opacity:.7}100%{opacity:0;translate:38px -22px;scale:2.2}}
+.far .bd .smoke,.q-low .bd .smoke{display:none}
+
+/* Chuva: escurece e esfria a cena (o canvas das gotas fica por cima) */
+.weather-tint{position:absolute;inset:0;z-index:8;pointer-events:none;background:linear-gradient(180deg,#1f2c3a,#2a3a3f);mix-blend-mode:multiply;opacity:0;transition:opacity 1.2s linear}
+.weather-rain{position:absolute;inset:0;z-index:9;pointer-events:none}
+
+@media (prefers-reduced-motion:reduce){.tr:not(.stump){animation:none}.bd .smoke{display:none}}
+
+/* ---------- Desempenho ----------
+   Filtros (drop-shadow, blur, brightness) e mistura de cores são recalculados sempre que
+   o conteúdo muda — e quadros de animação mudam o tempo todo. Por isso: sombras viram
+   elipses desenhadas no chão, e as camadas de noite/chuva usam transparência simples. */
+.u.sa .sprite-anim,.u.sprite-u .sprite-figure{filter:none}
+.u .sh{filter:none;left:-15px;top:-5px;width:30px;height:11px;background:radial-gradient(ellipse,#0b1d16a8 0 38%,#0b1d1600 72%)}
+.u.sa .sh{left:-17px;width:34px}
+.bd.sprite-b.busy .st{animation:none}
+
+/* Árvore: um único elemento — imagem do atlas por cima e sombra elíptica por baixo,
+   no mesmo fundo (sem pseudo-elementos nem filtro: menos camadas para pintar). */
+.tr:not(.stump){filter:none;background:url('../assets/world-props.webp') var(--tree,0 0) / 400% 300% no-repeat,radial-gradient(ellipse 37% 12% at 70% 88%,#0a241c8c 0 35%,#0a241c00 100%) no-repeat}
+.tr:not(.stump)::after,.tr:not(.stump)::before{display:none}
+
+.layer.night{mix-blend-mode:normal;background:#0a1130}
+.weather-tint{mix-blend-mode:normal;background:linear-gradient(180deg,#141e2a,#1c282d)}

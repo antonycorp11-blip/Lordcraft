@@ -1,0 +1,135 @@
+{
+  "_doc": "Folhas de animação de origem (geradas por IA) -> folhas limpas em src/assets/sprites. Rode: python3 tools/sprites/build_sprites.py",
+  "output": {
+    "cell": [
+      256,
+      256
+    ],
+    "baseline": 236,
+    "display": 72
+  },
+  "sheets": [
+    {
+      "key": "v_lavrador",
+      "src": "source/valmir-lavrador-completo.png",
+      "layout": "components",
+      "rows": [
+        "idle_s",
+        "idle_e",
+        "idle_n",
+        "idle_w",
+        "walk_s",
+        "walk_e",
+        "walk_n",
+        "walk_w",
+        "work_mine",
+        "work_chop",
+        "carry",
+        "work_build",
+        "hurt",
+        "die"
+      ],
+      "output": {
+        "cell": [
+          192,
+          192
+        ],
+        "baseline": 182
+      },
+      "height": 100,
+      "screen": 50,
+      "anims": {
+        "idle_s": {
+          "fps": 7,
+          "loop": true,
+          "align": "lock"
+        },
+        "idle_e": {
+          "fps": 7,
+          "loop": true,
+          "align": "lock"
+        },
+        "idle_n": {
+          "fps": 7,
+          "loop": true,
+          "align": "lock"
+        },
+        "idle_w": {
+          "fps": 7,
+          "loop": true,
+          "align": "lock"
+        },
+        "walk_s": {
+          "fps": 11,
+          "loop": true,
+          "align": "lock"
+        },
+        "walk_e": {
+          "fps": 11,
+          "loop": true,
+          "align": "lock"
+        },
+        "walk_n": {
+          "fps": 11,
+          "loop": true,
+          "align": "lock"
+        },
+        "walk_w": {
+          "fps": 11,
+          "loop": true,
+          "align": "lock"
+        },
+        "work_mine": {
+          "fps": 10,
+          "loop": true,
+          "align": "lock"
+        },
+        "work_chop": {
+          "fps": 10,
+          "loop": true,
+          "align": "lock"
+        },
+        "work_build": {
+          "fps": 10,
+          "loop": true,
+          "align": "lock"
+        },
+        "carry": {
+          "fps": 10,
+          "loop": true,
+          "align": "lock"
+        },
+        "die": {
+          "fps": 10,
+          "loop": false,
+          "align": "feet"
+        }
+      }
+    },
+    {
+      "key": "v_lanceiro",
+      "src": "source/valmir-lanceiro-walk12-attack12.png",
+      "grid": [
+        6,
+        4
+      ],
+      "height": 180,
+      "anims": {
+        "walk": {
+          "from": 0,
+          "count": 12,
+          "fps": 16,
+          "loop": true,
+          "align": "lock"
+        },
+        "attack": {
+          "from": 12,
+          "count": 12,
+          "fps": 20,
+          "loop": false,
+          "align": "cell"
+        }
+      }
+    }
+  ]
+}
