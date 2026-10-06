@@ -31,6 +31,9 @@ interface View {
   sprPos?: string;
   sprMode?: string;
   sprDir?: SpriteDir;     // última direção de movimento (para ficar parado na mesma pose)
+  lx?: number; ly?: number; // última posição desenhada (px)
+  stride?: number;          // distância andada: avança o ciclo de caminhada
+  svx?: number; svy?: number; // movimento suavizado (direção sem tremer)
   seen: number;
 }
 
@@ -160,6 +163,7 @@ export class Renderer {
     if (far !== this.lastFar) { this.root.classList.toggle('far', far); this.lastFar = far; }
     this.terrain.update(x0, y0, x1, y1, far, cam.zoom);
     while (g.world.changedTrees.length) this.terrain.onTreeRemoved(g.world.changedTrees.pop()!);
+    while (g.world.damagedTrees.length) this.terrain.onTreeDamaged(g.world.damagedTrees.pop()!);
 
     // escuridão
     const dark = g.darkness();
@@ -284,7 +288,7 @@ export class Renderer {
       v.spr = (v.el.querySelector('.sprite-anim') as HTMLElement) ?? undefined;
       const sheet = spriteSheetFor(u.type);
       if (v.spr && sheet) applySheetStyle(v.spr, sheet, unitScale(u.type));
-      v.sprPos = ''; v.sprMode = ''; v.sprDir = undefined;
+      v.sprPos = ''; v.sprMode = ''; v.sprDir = undefined; v.lx = v.ly = undefined; v.stride = 0; v.svx = v.svy = 0;
       v.cls = ''; v.tx = ''; v.hp = -1; v.mp = -1; v.lvlN = -1;
       this.views.set(u.id, v);
     }
@@ -309,9 +313,19 @@ export class Renderer {
     let cls = `${unitClass(u.type)} ${st} r-${this.relColor(u.owner)}`;
     if (v.spr) {
       const sheet = spriteSheetFor(u.type)!;
-      // direção pela velocidade; parada, mantém a última
-      if (Math.hypot(u.vx, u.vy) > 0.15) {
-        v.sprDir = Math.abs(u.vx) > Math.abs(u.vy) ? (u.vx > 0 ? 'e' : 'w') : (u.vy > 0 ? 's' : 'n');
+      // distância andada na tela: o ciclo de caminhada acompanha o chão
+      const dxp = rx - (v.lx ?? rx), dyp = ry - (v.ly ?? ry);
+      v.lx = rx; v.ly = ry;
+      const step = Math.hypot(dxp, dyp);
+      if (step < 24) v.stride = (v.stride ?? 0) + step; // ignora saltos (teleporte, reaparecer)
+      // direção pelo movimento suavizado, com folga para não piscar na diagonal
+      v.svx = (v.svx ?? 0) * 0.8 + dxp * 0.2;
+      v.svy = (v.svy ?? 0) * 0.8 + dyp * 0.2;
+      const ax = Math.abs(v.svx), ay = Math.abs(v.svy);
+      if (ax + ay > 0.08) {
+        const wasH = v.sprDir === 'e' || v.sprDir === 'w';
+        const horiz = wasH ? ax * 1.35 > ay : ax > ay * 1.35;
+        v.sprDir = horiz ? (v.svx > 0 ? 'e' : 'w') : (v.svy > 0 ? 's' : 'n');
       }
       const o = u.order;
       const work: WorkKind = o?.t === 'build' || o?.t === 'repair' ? 'build'
@@ -319,6 +333,7 @@ export class Renderer {
       const fr = spriteFrame(sheet, {
         state: spriteState(u), t: u.animT, dir: v.sprDir ?? 's', facingLeft: u.facing < 0, work,
         carrying: (u.carry === 'silver' || u.carry === 'aether') && u.carryAmt > 0,
+        dist: v.stride ?? 0,
       }, unitScale(u.type));
       if (fr.mode !== 'anim') cls += fr.mode === 'legacy' ? ' sa-legacy' : ' sa-still';
       if (fr.flip) cls += ' sa-flip';

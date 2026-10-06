@@ -19,7 +19,11 @@ export interface SpriteContext {
   facingLeft: boolean;  // para animações de um lado só, que são espelhadas
   work: WorkKind;
   carrying: boolean;    // carregando prata/éter nos braços
+  dist?: number;        // distância andada (px do mundo): o passo acompanha o chão, sem patinar
 }
+
+/** Px andados por ciclo completo de caminhada (dois passos) num personagem de escala 1. */
+export const WALK_CYCLE_PX = 44;
 
 export interface SpriteFrame {
   /** 'anim' = quadro da folha; 'still' = quadro parado (respira via CSS); 'legacy' = sprite antigo */
@@ -30,7 +34,7 @@ export interface SpriteFrame {
   carry: boolean; // usa a pose de carga (esconde o embrulho desenhado em CSS)
 }
 
-interface Choice { anim?: SpriteAnim; flip: boolean; carry?: boolean }
+interface Choice { anim?: SpriteAnim; flip: boolean; carry?: boolean; byDistance?: boolean }
 
 /** Escolhe a linha da folha. Linhas direcionais (walk_e, idle_n...) nunca são espelhadas. */
 function choose(sheet: SpriteSheet, c: SpriteContext): Choice | 'legacy' | null {
@@ -39,9 +43,9 @@ function choose(sheet: SpriteSheet, c: SpriteContext): Choice | 'legacy' | null 
   const dirAnim = (base: string) => a[`${base}_${c.dir}`];
   switch (c.state) {
     case 'walk':
-      if (c.carrying && a.carry) return { anim: a.carry, flip: fl, carry: true };
-      if (dirAnim('walk')) return { anim: dirAnim('walk'), flip: false };
-      if (a.walk) return { anim: a.walk, flip: fl };
+      if (c.carrying && a.carry) return { anim: a.carry, flip: fl, carry: true, byDistance: true };
+      if (dirAnim('walk')) return { anim: dirAnim('walk'), flip: false, byDistance: true };
+      if (a.walk) return { anim: a.walk, flip: fl, byDistance: true };
       return null;
     case 'idle':
       if (dirAnim('idle')) return { anim: dirAnim('idle'), flip: false };
@@ -86,7 +90,9 @@ export function spriteFrame(sheet: SpriteSheet, c: SpriteContext, scale: number)
   const ch = choose(sheet, c);
   if (ch === 'legacy') return { mode: 'legacy', x: 0, y: 0, flip: false, carry: false };
   if (ch?.anim) {
-    const i = frameIndex(ch.anim, c.t);
+    const i = ch.byDistance && c.dist !== undefined
+      ? Math.floor((c.dist / (WALK_CYCLE_PX * scale)) * ch.anim.frames) % ch.anim.frames
+      : frameIndex(ch.anim, c.t);
     return { mode: 'anim', x: i * sheet.cellW * k, y: ch.anim.row * sheet.cellH * k, flip: ch.flip, carry: !!ch.carry };
   }
   // parado ou morrendo sem quadros próprios: primeira pose de pé (a queda vem do CSS)

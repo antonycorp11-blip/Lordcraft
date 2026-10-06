@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { UNITS } from '../src/data/factions';
 import { unitClass, unitHTML } from '../src/render/views';
 import { SPRITE_SHEETS } from '../src/render/sprite-manifest';
-import { frameIndex, spriteFrame, type SpriteContext } from '../src/render/sprite-anim';
+import { frameIndex, spriteFrame, WALK_CYCLE_PX, type SpriteContext } from '../src/render/sprite-anim';
+import { World } from '../src/world/world';
 
 describe('sprites animados', () => {
   it('atribui um atlas e uma figura a toda unidade jogável, convocada ou neutra', () => {
@@ -66,4 +67,29 @@ describe('folhas quadro a quadro', () => {
     // parado sem "idle": primeira pose da caminhada
     expect(spriteFrame(lanc, ctx('idle'), 1)).toMatchObject({ mode: 'still', x: 0 });
   });
+
+  it('o passo avança pela distância andada (pé plantado, sem patinar)', () => {
+    const walk = lav.anims.walk_e!;
+    const cell = lav.cellW * (lav.display / lav.cellH);
+    const at = (dist: number) => spriteFrame(lav, ctx('walk', { dir: 'e', dist, t: 123 }), 1).x / cell;
+    expect(at(0)).toBe(0);
+    expect(at(WALK_CYCLE_PX / walk.frames * 1.5)).toBe(1);   // 1,5 quadro de distância -> quadro 1
+    expect(at(WALK_CYCLE_PX)).toBe(0);                         // um ciclo completo volta ao início
+    expect(at(WALK_CYCLE_PX / 2)).toBe(walk.frames / 2);       // meio ciclo -> meio da animação
+  });
 });
+
+describe('árvores', () => {
+  it('cada golpe tira madeira e avisa o desenho; ao acabar, a árvore some', () => {
+    const w = new World(4, 4);
+    const i = w.idx(1, 1);
+    w.setTree(i, 2, 0);
+    w.chopTree(i);
+    expect(w.tree[i]).toBe(1);
+    expect(w.damagedTrees).toEqual([i]);
+    w.chopTree(i);
+    expect(w.tree[i]).toBe(0);
+    expect(w.damagedTrees).toEqual([i]); // no último golpe quem avisa é a remoção
+  });
+});
+

@@ -148,8 +148,8 @@ export function generateMap(tpl: MapTemplate, seed: number, startBiomes: number[
         if (flatten) w.elev[i] = 0;
       }
   };
-  starts.forEach((s) => clearArea(s.x, s.y, 13));
-  exps.forEach((e) => clearArea(e.x, e.y, 8));
+  starts.forEach((s) => clearArea(s.x, s.y, 17)); // área inicial ampla para construir
+  exps.forEach((e) => clearArea(e.x, e.y, 9));
   crys.forEach((c) => clearArea(c.x, c.y, 4, false));
   if (tpl.boss) clearArea(tpl.boss[0] * N, tpl.boss[1] * N, 6);
 
@@ -177,10 +177,10 @@ export function generateMap(tpl: MapTemplate, seed: number, startBiomes: number[
   const mines: MapGenResult['mines'] = [];
   const crystals: MapGenResult['crystals'] = [];
   const mineFor = (px: number, py: number, amount: number, awayX: number, awayY: number) => {
-    // mina a ~8 tiles do centro, na direção "away" (para o canto)
+    // mina a ~9 tiles do centro (sede 5x5 + espaço para os trabalhadores), na direção "away"
     const len = Math.hypot(awayX, awayY) || 1;
-    const mx = Math.round(px + (awayX / len) * 8 - 1.5);
-    const my = Math.round(py + (awayY / len) * 8 - 1.5);
+    const mx = Math.round(px + (awayX / len) * 9 - 1.5);
+    const my = Math.round(py + (awayY / len) * 9 - 1.5);
     mines.push({ x: mx, y: my, amount });
   };
   starts.forEach((s) => mineFor(s.x, s.y, 13500, s.x < cx ? -1 : 1, s.y < cy ? -0.6 : 0.6));
@@ -225,7 +225,7 @@ export function generateMap(tpl: MapTemplate, seed: number, startBiomes: number[
       for (let x = Math.floor(px - r); x <= px + r; x++)
         if (x >= 0 && y >= 0 && x < N && y < N && Math.hypot(x - px, y - py) <= r) reserved[idx(x, y)] = 1;
   };
-  starts.forEach((s) => reserve(s.x, s.y, 10));
+  starts.forEach((s) => reserve(s.x, s.y, 13));
   exps.forEach((e) => reserve(e.x, e.y, 6.5));
   mines.forEach((m) => reserve(m.x + 1.5, m.y + 1.5, 3.5));
   crystals.forEach((c) => reserve(c.x + 1, c.y + 1, 3.5));

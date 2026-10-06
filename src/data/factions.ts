@@ -94,17 +94,17 @@ const valmirUnits: UnitDef[] = [
 const valmirBuildings: BuildingDef[] = [
   B({
     id: 'v_paco', name: 'Paço Real', faction: 'valmir', cat: 'hall', desc: 'Centro do reino. Recebe recursos e treina lavradores.',
-    cost: { silver: 400, wood: 180 }, time: 80, hp: 1800, size: 4, arch: 'hall', supply: 12, tier: 1,
+    cost: { silver: 400, wood: 180 }, time: 80, hp: 1800, size: 5, arch: 'hall', supply: 12, tier: 1,
     trains: ['v_lavrador', 'v_marechal'], dropoff: ['silver', 'wood', 'aether'], upgradesTo: 'v_fortaleza', heroRevive: true,
   }),
   B({
     id: 'v_fortaleza', name: 'Fortaleza', faction: 'valmir', cat: 'hall', desc: 'Paço fortificado. Libera o segundo nível tecnológico.',
-    cost: { silver: 300, wood: 200 }, time: 70, hp: 2300, size: 4, arch: 'hall', supply: 12, tier: 2, armor: 6,
+    cost: { silver: 300, wood: 200 }, time: 70, hp: 2300, size: 5, arch: 'hall', supply: 12, tier: 2, armor: 6,
     trains: ['v_lavrador', 'v_marechal'], dropoff: ['silver', 'wood', 'aether'], upgradesTo: 'v_cidadela', heroRevive: true,
   }),
   B({
     id: 'v_cidadela', name: 'Cidadela Branca', faction: 'valmir', cat: 'hall', desc: 'Coração inexpugnável de Valmir. Nível tecnológico máximo.',
-    cost: { silver: 350, wood: 250, aether: 50 }, time: 90, hp: 2900, size: 4, arch: 'hall', supply: 12, tier: 3, armor: 7,
+    cost: { silver: 350, wood: 250, aether: 50 }, time: 90, hp: 2900, size: 5, arch: 'hall', supply: 12, tier: 3, armor: 7,
     trains: ['v_lavrador', 'v_marechal'], dropoff: ['silver', 'wood', 'aether'], heroRevive: true,
   }),
   B({ id: 'v_casa', name: 'Casa de Colono', faction: 'valmir', cat: 'house', desc: '+10 de abastecimento.', cost: { silver: 80, wood: 20 }, time: 30, hp: 520, size: 2, arch: 'house', supply: 10 }),
@@ -217,17 +217,17 @@ const kraggUnits: UnitDef[] = [
 const kraggBuildings: BuildingDef[] = [
   B({
     id: 'k_fogueira', name: 'Grande Fogueira', faction: 'kragg', cat: 'hall', desc: 'Coração do clã. Recebe recursos e treina carregadores.',
-    cost: { silver: 360, wood: 160 }, time: 75, hp: 1600, size: 4, arch: 'hall', supply: 14, tier: 1,
+    cost: { silver: 360, wood: 160 }, time: 75, hp: 1600, size: 5, arch: 'hall', supply: 14, tier: 1,
     trains: ['k_carregador', 'k_ruvak'], dropoff: ['silver', 'wood', 'aether'], upgradesTo: 'k_bastiao', heroRevive: true,
   }),
   B({
     id: 'k_bastiao', name: 'Bastião de Ossos', faction: 'kragg', cat: 'hall', desc: 'Fogueira cercada por paliçadas. Segundo nível.',
-    cost: { silver: 280, wood: 180 }, time: 65, hp: 2100, size: 4, arch: 'hall', supply: 14, tier: 2,
+    cost: { silver: 280, wood: 180 }, time: 65, hp: 2100, size: 5, arch: 'hall', supply: 14, tier: 2,
     trains: ['k_carregador', 'k_ruvak'], dropoff: ['silver', 'wood', 'aether'], upgradesTo: 'k_trono', heroRevive: true,
   }),
   B({
     id: 'k_trono', name: 'Trono de Cinzas', faction: 'kragg', cat: 'hall', desc: 'Fortaleza dos senhores da guerra. Nível máximo.',
-    cost: { silver: 330, wood: 230, aether: 50 }, time: 85, hp: 2600, size: 4, arch: 'hall', supply: 14, tier: 3,
+    cost: { silver: 330, wood: 230, aether: 50 }, time: 85, hp: 2600, size: 5, arch: 'hall', supply: 14, tier: 3,
     trains: ['k_carregador', 'k_ruvak'], dropoff: ['silver', 'wood', 'aether'], heroRevive: true,
   }),
   B({ id: 'k_tenda', name: 'Tenda do Clã', faction: 'kragg', cat: 'house', desc: '+12 de abastecimento.', cost: { silver: 70, wood: 20 }, time: 25, hp: 420, size: 2, arch: 'house', supply: 12, armor: 3 }),
@@ -339,17 +339,17 @@ const veymarUnits: UnitDef[] = [
 const veymarBuildings: BuildingDef[] = [
   B({
     id: 'y_arvore_mae', name: 'Árvore-Mãe', faction: 'veymar', cat: 'hall', desc: 'Centro do círculo. Cresce sozinha e regenera.',
-    cost: { silver: 380, wood: 150 }, time: 80, hp: 1700, size: 4, arch: 'hall', supply: 12, tier: 1, regen: 2,
+    cost: { silver: 380, wood: 150 }, time: 80, hp: 1700, size: 5, arch: 'hall', supply: 12, tier: 1, regen: 2,
     trains: ['y_lanterneiro', 'y_sylra'], dropoff: ['silver', 'wood', 'aether'], upgradesTo: 'y_arvore_antiga', heroRevive: true,
   }),
   B({
     id: 'y_arvore_antiga', name: 'Árvore Antiga', faction: 'veymar', cat: 'hall', desc: 'A árvore desperta. Segundo nível.',
-    cost: { silver: 290, wood: 200 }, time: 70, hp: 2200, size: 4, arch: 'hall', supply: 12, tier: 2, regen: 3,
+    cost: { silver: 290, wood: 200 }, time: 70, hp: 2200, size: 5, arch: 'hall', supply: 12, tier: 2, regen: 3,
     trains: ['y_lanterneiro', 'y_sylra'], dropoff: ['silver', 'wood', 'aether'], upgradesTo: 'y_arvore_eterna', heroRevive: true,
   }),
   B({
     id: 'y_arvore_eterna', name: 'Árvore Eterna', faction: 'veymar', cat: 'hall', desc: 'Copa que toca as estrelas. Nível máximo.',
-    cost: { silver: 340, wood: 240, aether: 50 }, time: 90, hp: 2700, size: 4, arch: 'hall', supply: 12, tier: 3, regen: 4,
+    cost: { silver: 340, wood: 240, aether: 50 }, time: 90, hp: 2700, size: 5, arch: 'hall', supply: 12, tier: 3, regen: 4,
     trains: ['y_lanterneiro', 'y_sylra'], dropoff: ['silver', 'wood', 'aether'], heroRevive: true,
   }),
   B({
@@ -466,17 +466,17 @@ const durnUnits: UnitDef[] = [
 const durnBuildings: BuildingDef[] = [
   B({
     id: 'd_salao', name: 'Salão da Forja', faction: 'durn', cat: 'hall', desc: 'Salão de pedra e bronze. Recebe recursos.',
-    cost: { silver: 420, wood: 180 }, time: 85, hp: 2000, size: 4, arch: 'hall', supply: 12, tier: 1, armor: 6,
+    cost: { silver: 420, wood: 180 }, time: 85, hp: 2000, size: 5, arch: 'hall', supply: 12, tier: 1, armor: 6,
     trains: ['d_mineiro', 'd_brunna'], dropoff: ['silver', 'wood', 'aether'], upgradesTo: 'd_bastiao', heroRevive: true,
   }),
   B({
     id: 'd_bastiao', name: 'Bastião a Vapor', faction: 'durn', cat: 'hall', desc: 'Salão blindado. Segundo nível.',
-    cost: { silver: 300, wood: 200, aether: 20 }, time: 70, hp: 2500, size: 4, arch: 'hall', supply: 12, tier: 2, armor: 7,
+    cost: { silver: 300, wood: 200, aether: 20 }, time: 70, hp: 2500, size: 5, arch: 'hall', supply: 12, tier: 2, armor: 7,
     trains: ['d_mineiro', 'd_brunna'], dropoff: ['silver', 'wood', 'aether'], upgradesTo: 'd_cidadela', heroRevive: true,
   }),
   B({
     id: 'd_cidadela', name: 'Cidadela Rúnica', faction: 'durn', cat: 'hall', desc: 'Obra-prima de engenharia. Nível máximo.',
-    cost: { silver: 350, wood: 250, aether: 60 }, time: 90, hp: 3100, size: 4, arch: 'hall', supply: 12, tier: 3, armor: 8,
+    cost: { silver: 350, wood: 250, aether: 60 }, time: 90, hp: 3100, size: 5, arch: 'hall', supply: 12, tier: 3, armor: 8,
     trains: ['d_mineiro', 'd_brunna'], dropoff: ['silver', 'wood', 'aether'], heroRevive: true,
   }),
   B({ id: 'd_alojamento', name: 'Alojamento', faction: 'durn', cat: 'house', desc: '+10 de abastecimento.', cost: { silver: 90, wood: 30 }, time: 30, hp: 700, size: 2, arch: 'house', supply: 10, armor: 6 }),

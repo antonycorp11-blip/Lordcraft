@@ -8,6 +8,13 @@ import { PAD, paintGround, releaseGround, whenGroundReady, type GroundBlob } fro
 // visível, organizados em blocos com renderização sob demanda.
 
 const CH = 16; // tiles por bloco
+const TREE_WOOD = 50; // madeira de uma árvore inteira (mapgen)
+
+/** Estágio de dano pela madeira restante: inteira, cortada, quase caindo. */
+function treeStage(wood: number): string {
+  const f = wood / TREE_WOOD;
+  return f < 0.34 ? ' d2' : f < 0.67 ? ' d1' : '';
+}
 const CPX = CH * TILE;
 const DRAW_ORDER: Record<number, number> = {
   [Ter.Water]: 0, [Ter.Shallow]: 1, [Ter.Sand]: 2, [Ter.Dirt]: 3, [Ter.Grass]: 4, [Ter.Moss]: 4, [Ter.Ash]: 4,
@@ -88,12 +95,14 @@ export class TerrainView {
     for (const c of this.chunks) {
       const vis = c.cx >= c0 && c.cx <= c1 && c.cy >= r0 && c.cy <= r1;
       if (vis && !c.built) {
-        if (budget-- <= 0) continue;
+        if (budget <= 0) continue;
+        budget--;
         this.build(c);
       }
       if (vis) {
         c.lastSeen = this.tick;
-        if (this.atlasReady && c.gcv && c.painted < want && paintBudget-- > 0) {
+        if (this.atlasReady && c.gcv && c.painted < want && paintBudget > 0) {
+          paintBudget--;
           paintGround(c.gcv, c.blobs, CPX, want);
           c.painted = want;
         }
@@ -104,6 +113,18 @@ export class TerrainView {
       if (showObjs !== (c.objs.style.display !== 'none')) c.objs.style.display = showObjs ? '' : 'none';
       if (showFar && c.farDirty) this.buildFar(c);
       if (showFar !== c.farShown) { c.far.style.display = showFar ? '' : 'none'; c.farShown = showFar; }
+    }
+    // Prepara com antecedência o anel de blocos em volta da tela (1 por quadro, só quando
+    // os visíveis já estão prontos): ao mover a câmera, eles não precisam ser montados na hora.
+    if (budget === 3 && paintBudget === 2) {
+      for (let cy = r0 - 1; cy <= r1 + 1; cy++)
+        for (let cx = c0 - 1; cx <= c1 + 1; cx++) {
+          if (cx < 0 || cy < 0 || cx >= this.cols || cy >= this.rows) continue;
+          const c = this.chunks[cx + cy * this.cols];
+          c.lastSeen = this.tick;
+          if (!c.built) { this.build(c); budget = 0; break; }
+          if (this.atlasReady && c.gcv && c.painted < want) { paintGround(c.gcv, c.blobs, CPX, want); c.painted = want; budget = 0; break; }
+        }
     }
     this.releaseOldGround();
   }
@@ -187,7 +208,7 @@ export class TerrainView {
           const k = w.treeKind[i];
           const v = Math.floor(h * 3);
           const ox = Math.round((hash2(x, y, S + 9) - 0.5) * 8), oy = Math.round((hash2(y, x, S + 9) - 0.5) * 6);
-          o.push(`<i class="tr k${k} v${v}" data-i="${i}" style="left:${lx + ox - 18}px;top:${ly + oy - 34}px;z-index:${z + oy};animation-delay:${-((i * 0.618) % 1) * 6}s"></i>`);
+          o.push(`<i class="tr k${k} v${v}${treeStage(w.tree[i])}" data-i="${i}" style="left:${lx + ox - 18}px;top:${ly + oy - 34}px;z-index:${z + oy};animation-delay:${-((i * 0.618) % 1) * 6}s"></i>`);
         }
       }
     // decoração
@@ -229,10 +250,27 @@ export class TerrainView {
     c.far.innerHTML = out.join('');
   }
 
-  /** Árvores derrubadas: vira toco. */
+  /** Árvore perdeu madeira: inclina conforme o estágio de dano. */
+  onTreeDamaged(i: number) {
+    const el = this.treeEls.get(i);
+    if (!el) return;
+    const stage = treeStage(this.world.tree[i]).trim();
+    el.classList.toggle('d1', stage === 'd1');
+    el.classList.toggle('d2', stage === 'd2');
+  }
+
+  /** Árvores derrubadas: uma cópia tomba e some, e no lugar fica o toco. */
   onTreeRemoved(i: number) {
     const el = this.treeEls.get(i);
     if (el) {
+      if (!this.far && el.offsetParent) {
+        const fall = el.cloneNode(false) as HTMLElement;
+        fall.classList.remove('d1', 'd2');
+        fall.classList.add('falling');
+        el.after(fall);
+        setTimeout(() => fall.remove(), 1100);
+      }
+      el.classList.remove('d1', 'd2');
       el.classList.add('stump');
       this.treeEls.delete(i);
     }
@@ -247,6 +285,7 @@ export class TerrainView {
     if (!el) return;
     if ((el as any)._shk && (el as any)._shk > performance.now()) return;
     (el as any)._shk = performance.now() + 320;
-    el.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(2.5deg)' }, { transform: 'rotate(-2deg)' }, { transform: 'rotate(0deg)' }], { duration: 300 });
+    // tremor lateral (translate) para não sobrescrever o tamanho/inclinação da árvore
+    el.animate([{ translate: '0 0' }, { translate: '2px 0' }, { translate: '-2px 0' }, { translate: '0 0' }], { duration: 300 });
   }
 }

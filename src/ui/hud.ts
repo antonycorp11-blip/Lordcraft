@@ -376,28 +376,16 @@ export class Hud {
       if (html !== this.infoSig) { this.infoSig = html; this.el.info.innerHTML = html; }
       return;
     }
-    // múltipla seleção: agrupada por tipo
+    // múltipla seleção: uma fileira de retratos com a contagem por tipo (toque = só esse tipo)
     const groups = new Map<string, Entity[]>();
     for (const e of sel) { if (!groups.has(e.type)) groups.set(e.type, []); groups.get(e.type)!.push(e); }
     let tiles = '';
     for (const [type, es] of groups) {
-      const hp = es.reduce((a, e) => a + e.hp / e.maxHp, 0) / es.length;
       const name = UNITS[type]?.name ?? BUILDINGS[type]?.name ?? type;
       const own = es[0].owner === s.pid;
-      const cnt = es.length;
-      if (cnt <= 3 && groups.size <= 8 && sel.length <= 24) {
-        for (const e of es) tiles += `<button class="ut ${s.subgroup === type ? 'act' : ''}" data-type="${type}" data-single="${e.id}" title="${name}">${portraitHTML(type, own ? color : g.players[e.owner]?.color ?? '#999')}<i class="hbar"><b style="transform:scaleX(${(e.hp / e.maxHp).toFixed(2)})" class="${e.hp / e.maxHp < 0.35 ? 'lo' : ''}"></b></i></button>`;
-      } else {
-        tiles += `<button class="ut ${s.subgroup === type ? 'act' : ''}" data-type="${type}" title="${name} — clique: selecionar só este tipo; Ctrl+clique: remover">${portraitHTML(type, own ? color : '#999')}<em>${cnt}</em><i class="hbar"><b style="transform:scaleX(${hp.toFixed(2)})" class="${hp < 0.35 ? 'lo' : ''}"></b></i></button>`;
-      }
+      tiles += `<button class="ut ${s.subgroup === type ? 'act' : ''}" data-type="${type}" title="${name} — toque: selecionar só este tipo">${portraitHTML(type, own ? color : g.players[es[0].owner]?.color ?? '#999')}<em>${es.length}</em></button>`;
     }
-    const units = sel.filter((e) => e.kind === 'unit');
-    const classes = new Set(units.map((u) => u.udef!.cls));
-    const filters: [string, string][] = [];
-    if ((classes.has('melee') || classes.has('cavalry')) && classes.size > 1) filters.push(['front', 'Linha de frente']);
-    if ((classes.has('ranged') || classes.has('caster') || classes.has('siege')) && classes.size > 1) filters.push(['back', 'Retaguarda']);
-    for (const c of ['hero', 'air', 'siege', 'worker'] as const) if (classes.has(c) && classes.size > 1) filters.push([c, CLASS_NAMES[c]]);
-    const html = `<div class="multi"><div class="mh"><b>${sel.length}</b> selecionados${filters.length ? `<span class="filters">${filters.map(([k, n]) => `<button data-cls="${k}">${n}</button>`).join('')}</span>` : ''}</div><div class="tiles">${tiles}</div></div>`;
+    const html = `<div class="multi"><div class="tiles">${tiles}</div></div>`;
     if (html !== this.infoSig) { this.infoSig = html; this.el.info.innerHTML = html; }
   }
 
@@ -413,7 +401,9 @@ export class Hud {
       const d = ITEMS[e.itemId];
       return `<div class="single"><div class="por">${icon(e.kind === 'chest' ? 'chest' : d?.icon ?? 'item')}</div><div class="det"><h3>${e.kind === 'chest' ? 'Baú de Tesouro' : d?.name}</h3><p>${e.kind === 'chest' ? 'Toque com qualquer unidade para abrir.' : d?.desc}</p><p class="hint">${e.kind === 'item' ? 'Clique direito com um herói para pegar.' : ''}</p></div></div>`;
     }
-    const hpLine = `<div class="bars"><div class="bar hp"><b style="transform:scaleX(${(e.hp / e.maxHp).toFixed(3)})"></b><span>${fmt(e.hp)} / ${fmt(e.maxHp)}</span></div>${e.maxMana > 0 ? `<div class="bar mp"><b style="transform:scaleX(${(e.mana / e.maxMana).toFixed(3)})"></b><span>${fmt(e.mana)} / ${fmt(e.maxMana)}</span></div>` : ''}</div>`;
+    // vida/mana em passos de 5%: o cartão só é redesenhado quando a barra muda de verdade
+    const step = (v: number) => (Math.round(v * 20) / 20).toFixed(2);
+    const hpLine = `<div class="bars"><div class="bar hp"><b style="transform:scaleX(${step(e.hp / e.maxHp)})" class="${e.hp / e.maxHp < 0.35 ? 'lo' : ''}"></b></div>${e.maxMana > 0 ? `<div class="bar mp"><b style="transform:scaleX(${step(e.mana / e.maxMana)})"></b></div>` : ''}</div>`;
     if (e.kind === 'unit') {
       const d = e.udef!;
       const a = d.attack;
@@ -435,18 +425,19 @@ export class Hud {
       }
       const ord = e.order ? orderText(e) : e.targetId ? 'Combatendo' : 'Aguardando ordens';
       const buffs = e.buffs.filter((b) => !b.id.startsWith('a_') || b.armor || b.dmgMul || b.atkMul || b.regen).map((b) => `<i class="bf" title="${buffName(b.id)}">${buffName(b.id)}</i>`).join('');
-      return `<div class="single"><div class="por" style="--tc:${pc}">${portraitHTML(e.type, pc)}</div><div class="det"><h3>${d.name}${d.hero ? '' : ''}</h3><p class="sub">${CLASS_NAMES[d.cls]} · ${owner}</p>${hpLine}${stats}${hero}<p class="ord">${own ? ord : ''}${e.timedLife > 0 ? ` · ${Math.ceil(e.timedLife)}s` : ''}</p><div class="buffs">${buffs}</div></div></div>`;
+      void stats; void ord; void buffs; // detalhes ficam fora do cartão compacto
+      return `<div class="single"><div class="por" style="--tc:${pc}">${portraitHTML(e.type, pc)}</div><div class="det"><h3>${d.name}${own ? '' : ` <small>${owner}</small>`}</h3>${hpLine}${hero}</div></div>`;
     }
     // edifício
     const d = e.bdef!;
     let extra = '';
-    if (!e.built) extra = `<div class="bar prog"><b style="transform:scaleX(${e.progress.toFixed(3)})"></b><span>Construindo ${Math.floor(e.progress * 100)}%${e.buildersLast > 1 ? ` · ${e.buildersLast} construtores` : ''}</span></div>`;
+    if (!e.built) extra = `<div class="bar prog"><b style="transform:scaleX(${step(e.progress)})"></b><span>Construindo ${Math.floor(e.progress * 20) * 5}%</span></div>`;
     else if (e.bqueue.length && own) {
       extra = `<div class="queue">${e.bqueue.map((q, i) => {
         const name = q.kind === 'research' ? RESEARCHES[q.id].name : q.kind === 'upgrade' ? BUILDINGS[q.id].name : UNITS[q.id].name;
         const ic = q.kind === 'unit' || q.kind === 'revive' ? portraitHTML(q.id, color) : icon(q.kind === 'research' ? RESEARCHES[q.id].icon : 'upgrade');
         const active = i < (d.parallel ?? 1);
-        return `<button class="qi ${active ? 'act' : ''}" data-q="${i}" data-b="${e.id}" title="${name} — clique para cancelar">${ic}${active ? `<i class="qp"><b style="transform:scaleX(${(q.t / q.total).toFixed(3)})"></b></i>` : ''}</button>`;
+        return `<button class="qi ${active ? 'act' : ''}" data-q="${i}" data-b="${e.id}" title="${name} — clique para cancelar">${ic}${active ? `<i class="qp"><b style="transform:scaleX(${step(q.t / q.total)})"></b></i>` : ''}</button>`;
       }).join('')}</div>`;
       const first = e.bqueue[0];
       if (first.kind === 'unit' && first.t === 0 && g.supplyFree(s.pid) < UNITS[first.id].supply) extra += `<p class="warn">Abastecimento insuficiente — construa mais ${BUILDINGS[FACTIONS[g.players[s.pid].faction].houses].name.toLowerCase()}s.</p>`;
@@ -456,7 +447,8 @@ export class Hud {
     if (d.supply) st += `<span title="Abastecimento">${icon('supply')}+${d.supply}</span>`;
     if (d.aetherPerMin) st += `<span title="Éter por minuto">${icon('aether')}+${d.aetherPerMin}/min</span>`;
     st += '</div>';
-    return `<div class="single"><div class="por bpor" style="--tc:${pc}">${portraitHTML(e.type, pc)}</div><div class="det"><h3>${d.name}</h3><p class="sub">${owner}${d.tier ? ` · Nível ${d.tier}` : ''}</p>${hpLine}${st}${extra}<p class="hint">${!e.bqueue.length && e.built ? d.desc : ''}</p></div></div>`;
+    void st;
+    return `<div class="single"><div class="por bpor" style="--tc:${pc}">${portraitHTML(e.type, pc)}</div><div class="det"><h3>${d.name}${own ? '' : ` <small>${owner}</small>`}</h3>${hpLine}${extra}</div></div>`;
   }
 
   // ------------------------------------------------------------------

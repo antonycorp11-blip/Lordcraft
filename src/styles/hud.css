@@ -1125,3 +1125,133 @@
     animation: none;
   }
 }
+
+/* ---------- Cartão de seleção compacto ----------
+   Só o essencial: retrato pequeno, nome e vida; fila/progresso/herói quando houver.
+   Largura só do necessário (não ocupa a linha inteira no celular). */
+.info {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: min(340px, 100%);
+  max-height: 150px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+}
+
+.single {
+  align-items: center;
+  gap: 10px;
+}
+
+.por {
+  width: 42px;
+  height: 42px;
+  border-width: 1.5px;
+}
+
+.por .portrait.sa {
+  scale: 0.4;
+}
+
+.det h3 {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.det h3 small {
+  color: var(--dim);
+  font: 400 11px system-ui, sans-serif;
+}
+
+.bars {
+  width: 150px;
+  margin-top: 5px;
+  gap: 2px;
+}
+
+.bar,
+.xp {
+  height: 5px;
+}
+
+.bar.mp {
+  height: 3px;
+}
+
+.bar.prog,
+.xp {
+  width: 150px;
+  margin-top: 15px;
+}
+
+.queue,
+.inv {
+  margin-top: 6px;
+  gap: 4px;
+}
+
+.hud .qi,
+.hud .slot {
+  width: 30px;
+  height: 30px;
+}
+
+/* várias unidades: só a fileira de retratos */
+.info:has(.multi) {
+  padding: 5px 6px;
+  border-radius: 26px;
+}
+
+.tiles {
+  flex-wrap: nowrap;
+  gap: 5px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.hud .ut {
+  flex: none;
+  width: 38px;
+  height: 38px;
+}
+
+.ut .portrait.sa {
+  scale: 0.33;
+}
+
+/* com fila/herói o cartão cresce em altura: cantos menos arredondados */
+.info:has(.queue),
+.info:has(.inv),
+.info:has(.prog) {
+  border-radius: 18px;
+}
+
+@media (max-width: 620px), (pointer: coarse) and (max-width: 900px) {
+  .info {
+    order: -1;
+    flex: 0 1 auto;
+    max-width: 100%;
+    max-height: 120px;
+    padding: 5px 10px 5px 5px;
+  }
+
+  .por {
+    width: 36px;
+    height: 36px;
+  }
+
+  .por .portrait.sa {
+    scale: 0.34;
+  }
+
+  .bars {
+    width: 120px;
+  }
+
+  .hud .ut {
+    width: 34px;
+    height: 34px;
+  }
+}

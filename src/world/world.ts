@@ -25,6 +25,7 @@ export class World {
   version = 1; // muda quando bloqueios mudam (invalida caminhos)
   treeVersion = 1;
   changedTrees: number[] = []; // células alteradas para o renderizador
+  damagedTrees: number[] = []; // árvores que perderam madeira (o desenho mostra o dano)
 
   constructor(w: number, h: number) {
     this.w = w;
@@ -64,6 +65,13 @@ export class World {
     this.treeKind[i] = kind;
     if (wood > 0) this.block[i] |= BL_TREE;
     else this.block[i] &= ~BL_TREE;
+  }
+
+  /** Um golpe de machado: tira 1 de madeira e avisa o desenho. */
+  chopTree(i: number) {
+    if (!this.tree[i]) return;
+    this.tree[i]--;
+    if (this.tree[i] > 0) this.damagedTrees.push(i);
   }
 
   removeTree(i: number) {

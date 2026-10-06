@@ -93,8 +93,8 @@
 .q-high .tr.v2:not(.stump){animation:tree-sway 6.1s ease-in-out infinite alternate}
 .q-high.raining .tr:not(.stump){animation:tree-storm 2.1s ease-in-out infinite alternate}
 .q-high.raining .tr.v1:not(.stump),.q-high.raining .tr.v3:not(.stump){animation-duration:2.6s}
-@keyframes tree-sway{0%{rotate:-1deg}100%{rotate:1.3deg}}
-@keyframes tree-storm{0%{rotate:-2.4deg}35%{rotate:1.2deg}60%{rotate:-.6deg}100%{rotate:3.2deg}}
+@keyframes tree-sway{0%{rotate:calc(var(--lean,0deg) - 1deg)}100%{rotate:calc(var(--lean,0deg) + 1.3deg)}}
+@keyframes tree-storm{0%{rotate:calc(var(--lean,0deg) - 2.4deg)}35%{rotate:calc(var(--lean,0deg) + 1.2deg)}60%{rotate:calc(var(--lean,0deg) - .6deg)}100%{rotate:calc(var(--lean,0deg) + 3.2deg)}}
 .far .tr,.q-low .tr,.lod2 .tr{animation:none}
 
 /* Fumaça de chaminé: quatro baforadas defasadas sobem, crescem e somem */
@@ -130,8 +130,19 @@
 
 /* Árvore: um único elemento — imagem do atlas por cima e sombra elíptica por baixo,
    no mesmo fundo (sem pseudo-elementos nem filtro: menos camadas para pintar). */
-.tr:not(.stump){filter:none;background:url('../assets/world-props.webp') var(--tree,0 0) / 400% 300% no-repeat,radial-gradient(ellipse 37% 12% at 70% 88%,#0a241c8c 0 35%,#0a241c00 100%) no-repeat}
+.tr:not(.stump){filter:none;background:url('../assets/sprites/trees.webp') var(--tree,0 0) / 400% 100% no-repeat,radial-gradient(ellipse 34% 9% at 52% 90%,#0a241c8c 0 35%,#0a241c00 100%) no-repeat}
 .tr:not(.stump)::after,.tr:not(.stump)::before{display:none}
 
 .layer.night{mix-blend-mode:normal;background:#0a1130}
 .weather-tint{mix-blend-mode:normal;background:linear-gradient(180deg,#141e2a,#1c282d)}
+
+/* Dano das árvores: inclinam conforme são cortadas e tombam ao acabar a madeira */
+.tr:not(.stump){rotate:var(--lean,0deg)}
+.tr.d1{--lean:5deg}
+.tr.d2{--lean:12deg}
+.tr.falling{pointer-events:none;animation:tree-fall 1s cubic-bezier(.55,0,.85,.4) forwards!important}
+@keyframes tree-fall{0%{rotate:12deg;opacity:1}75%{rotate:84deg;opacity:1}100%{rotate:88deg;opacity:0}}
+@media (prefers-reduced-motion:reduce){.tr.falling{display:none}}
+
+/* Sede do reino: desenhada além da própria área (mais alta e mais larga), como um castelo */
+.bd.sprite-b.a-hall .st{inset:-26% -12% 0 -12%}

@@ -546,7 +546,7 @@ function gatherUpdate(g: Game, e: Entity, dt: number): boolean {
         e.carryAmt++;
         if ((g.tick + e.id) % 3 === 0) g.emit('chop', tx + 0.5, ty + 0.5);
         if (gd.woodMode === 'chop') {
-          w.tree[o.tile]--;
+          w.chopTree(o.tile);
           if (w.tree[o.tile] <= 0) { w.tree[o.tile] = 1; w.removeTree(o.tile); g.emit('smoke', tx + 0.5, ty + 0.5); }
         }
         if (e.carryAmt >= carryCap(g, e, 'wood')) { e.sub = 2; e.anim = 'idle'; e.path = null; e.bestDist = Infinity; }
