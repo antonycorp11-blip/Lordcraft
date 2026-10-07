@@ -3,6 +3,7 @@ import type { Decor } from '../world/mapgen';
 import { World, Ter, TER_NAMES } from '../world/world';
 import { TILE } from './camera';
 import { PAD, paintGround, releaseGround, whenGroundReady, type GroundBlob } from './ground-paint';
+import { paintScenery, sceneryReady, treeBox } from './scenery';
 
 // Atlases de terreno e objetos em manchas orgânicas sobrepostas, sem grade
 // visível, organizados em blocos com renderização sob demanda.
@@ -52,8 +53,13 @@ export class TerrainView {
   builtCount = 0;
   private tick = 0;
   private atlasReady = false;
+  private sceneryOk = false;
+  /** tocos deixados por árvores derrubadas (só visual) */
+  stumps = new Set<number>();
+  private decor: Decor[];
 
   constructor(world: World, private groundLayer: HTMLElement, private objLayer: HTMLElement, decor: Decor[], seed: number) {
+    this.decor = decor;
     this.world = world;
     this.seed = seed;
     this.cols = Math.ceil(world.w / CH);
@@ -88,6 +94,11 @@ export class TerrainView {
     this.far = far;
     this.tick++;
     if (!this.atlasReady) this.atlasReady = whenGroundReady(() => { this.atlasReady = true; });
+    if (!this.sceneryOk) this.sceneryOk = sceneryReady(() => {
+      // as imagens do cenário chegaram: repinta o que já estava pintado só com o chão
+      this.sceneryOk = true;
+      for (const c of this.chunks) c.painted = 0;
+    });
     const target = Math.min(1.25, zoom * Math.min(2, window.devicePixelRatio || 1));
     const want = PAINT_STEPS.find((p) => p >= target) ?? 1.25;
     let budget = 3; // limita construções por quadro (fluidez da câmera)
@@ -103,8 +114,7 @@ export class TerrainView {
         c.lastSeen = this.tick;
         if (this.atlasReady && c.gcv && c.painted < want && paintBudget > 0) {
           paintBudget--;
-          paintGround(c.gcv, c.blobs, CPX, want);
-          c.painted = want;
+          this.paint(c, want);
         }
       }
       const showObjs = vis && !far;
@@ -123,7 +133,7 @@ export class TerrainView {
           const c = this.chunks[cx + cy * this.cols];
           c.lastSeen = this.tick;
           if (!c.built) { this.build(c); budget = 0; break; }
-          if (this.atlasReady && c.gcv && c.painted < want) { paintGround(c.gcv, c.blobs, CPX, want); c.painted = want; budget = 0; break; }
+          if (this.atlasReady && c.gcv && c.painted < want) { this.paint(c, want); budget = 0; break; }
         }
     }
     this.releaseOldGround();
@@ -175,52 +185,7 @@ export class TerrainView {
     blobs.sort((a, b) => a.ord - b.ord);
     c.blobs = blobs;
 
-    // ---- detalhes por tile ----
-    for (let y = ty0; y < Math.min(w.h, ty0 + CH); y++)
-      for (let x = tx0; x < Math.min(w.w, tx0 + CH); x++) {
-        const i = w.idx(x, y);
-        const t = w.ter[i];
-        const lx = (x - tx0) * TILE, ly = (y - ty0) * TILE;
-        const h = hash2(x * 3, y * 5, S + 1);
-        const z = (y + 1) * TILE;
-        if (t === Ter.Bridge) g.push(`<i class="brg" style="left:${lx}px;top:${ly}px"></i>`);
-        else if (t === Ter.Water && h < 0.16) g.push(`<i class="rp" style="left:${lx + (h * 60) % 16}px;top:${ly + 8}px;animation-delay:-${(h * 37) % 6}s"></i>`);
-        else if (t === Ter.Road && h < 0.25) g.push(`<i class="pebble" style="left:${lx + (h * 90) % 20}px;top:${ly + (h * 55) % 20}px"></i>`);
-        else if (w.block[i] === 0 && !w.tree[i]) {
-          // decoração (arte gerada): arbustos, flores, capim, pedras, troncos, fardos de feno
-          if (h < 0.014 && (t === Ter.Grass || t === Ter.Moss || t === Ter.Dirt)) {
-            const props = t === Ter.Dirt ? [0, 1, 5, 12] : [2, 3, 4, 2, 3, 0, 1, 5];
-            const k = props[Math.floor(hash2(x * 7, y * 11, S + 3) * props.length)];
-            o.push(`<i class="prop p${k}" style="left:${lx + (h * 500) % 10 - 4}px;top:${ly - 12}px;z-index:${z}"></i>`);
-          } else if (h < 0.09 && (t === Ter.Grass || t === Ter.Moss)) g.push(`<i class="tuft ${t === Ter.Moss ? 'm' : ''} ${h < 0.03 ? 'fl' : ''}" style="left:${lx + (h * 300) % 22}px;top:${ly + (h * 170) % 22}px"></i>`);
-          else if (h < 0.05 && t === Ter.Snow) g.push(`<i class="tuft s" style="left:${lx + 8}px;top:${ly + 10}px"></i>`);
-          else if (h < 0.06 && t === Ter.Ash) g.push(`<i class="ember" style="left:${lx + 10}px;top:${ly + 12}px;animation-delay:-${(h * 50) % 4}s"></i>`);
-          else if (h > 0.985) g.push(`<i class="pebble big" style="left:${lx + 6}px;top:${ly + 10}px"></i>`);
-        }
-        // penhascos
-        if (w.cliff[i]) {
-          const south = y + 1 < w.h && w.elev[w.idx(x, y + 1)] === 0;
-          const north = y > 0 && w.elev[w.idx(x, y - 1)] === 0;
-          o.push(`<i class="cliff ${south ? 'cs' : ''} ${north ? 'cn' : ''} v${Math.floor(h * 3)}" style="left:${lx}px;top:${ly}px;z-index:${z}"></i>`);
-        }
-        // rocha (montanha)
-        if (t === Ter.Rock) {
-          const v = Math.floor(h * 4);
-          o.push(`<i class="rk v${v}" style="left:${lx - 4}px;top:${ly - 10}px;z-index:${z}"></i>`);
-        }
-        // árvores
-        if (w.tree[i]) {
-          const k = w.treeKind[i];
-          const v = Math.floor(h * 3);
-          const ox = Math.round((hash2(x, y, S + 9) - 0.5) * 8), oy = Math.round((hash2(y, x, S + 9) - 0.5) * 6);
-          o.push(`<i class="tr k${k} v${v}${treeStage(w.tree[i])}" data-i="${i}" style="left:${lx + ox - 18}px;top:${ly + oy - 34}px;z-index:${z + oy};animation-delay:${-((i * 0.618) % 1) * 6}s"></i>`);
-        }
-      }
-    // decoração
-    for (const d of this.decorByChunk.get(c.cx + c.cy * this.cols) ?? []) {
-      o.push(`<i class="dc dc-${d.kind}" style="left:${(d.x - tx0) * TILE}px;top:${(d.y - ty0) * TILE}px;z-index:${(d.y + 1) * TILE}"></i>`);
-    }
-    c.ground.innerHTML = g.join('');
+    c.ground.innerHTML = '';
     // canvas do chão por baixo dos detalhes, com margem para as manchas da borda
     c.gcv = document.createElement('canvas');
     c.gcv.className = 'gcv';
@@ -228,8 +193,30 @@ export class TerrainView {
     c.gcv.style.cssText = `left:${-PAD}px;top:${-PAD}px;width:${CPX + PAD * 2}px;height:${CPX + PAD * 2}px`;
     c.ground.prepend(c.gcv);
     c.painted = 0;
-    c.objs.innerHTML = o.join('');
-    c.objs.querySelectorAll<HTMLElement>('.tr').forEach((el) => this.treeEls.set(Number(el.dataset.i), el));
+    c.objs.innerHTML = '';
+  }
+
+  /** Chão + cenário fixo do bloco num só canvas (com o que transborda dos vizinhos). */
+  private paint(c: Chunk, scale: number) {
+    paintGround(c.gcv!, c.blobs, CPX, scale);
+    if (this.sceneryOk) {
+      const ctx = c.gcv!.getContext('2d')!;
+      ctx.setTransform(scale, 0, 0, scale, (PAD - c.cx * CPX) * scale, (PAD - c.cy * CPX) * scale);
+      paintScenery(ctx, this.world, this.seed, this.decor, this.stumps, c.cx * CPX - PAD, c.cy * CPX - PAD, CPX + PAD * 2, CPX + PAD * 2);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    c.painted = scale;
+  }
+
+  /** Repinta os blocos que mostram a árvore do tile i (o dela e os vizinhos pela margem). */
+  private dirtyAround(i: number) {
+    const b = treeBox(this.world, i, this.seed);
+    const c0 = Math.max(0, Math.floor((b.x - PAD) / CPX)), c1 = Math.min(this.cols - 1, Math.floor((b.x + b.w + PAD) / CPX));
+    const r0 = Math.max(0, Math.floor((b.y - PAD) / CPX)), r1 = Math.min(this.rows - 1, Math.floor((b.y + b.h + PAD) / CPX));
+    for (let cy = r0; cy <= r1; cy++) for (let cx = c0; cx <= c1; cx++) {
+      const c = this.chunks[cx + cy * this.cols];
+      if (c.painted > 0) c.painted = 0.01; // menor que qualquer escala: repinta assim que possível
+    }
   }
 
   /** Copa de floresta simplificada para zoom distante. */
@@ -255,42 +242,25 @@ export class TerrainView {
     c.far.innerHTML = out.join('');
   }
 
-  /** Árvore perdeu madeira: inclina conforme o estágio de dano. */
+  /** Árvore perdeu madeira: o desenho muda de estágio (inteira, cortada, quase caindo). */
   onTreeDamaged(i: number) {
-    const el = this.treeEls.get(i);
-    if (!el) return;
-    const stage = treeStage(this.world.tree[i]).trim();
-    el.classList.toggle('d1', stage === 'd1');
-    el.classList.toggle('d2', stage === 'd2');
+    this.dirtyAround(i);
   }
 
   /** Árvores derrubadas: uma cópia tomba e some, e no lugar fica o toco. */
   onTreeRemoved(i: number) {
-    const el = this.treeEls.get(i);
-    if (el) {
-      if (!this.far && el.offsetParent) {
-        const fall = el.cloneNode(false) as HTMLElement;
-        fall.classList.remove('d1', 'd2');
-        fall.classList.add('falling');
-        el.after(fall);
-        setTimeout(() => fall.remove(), 1100);
-      }
-      el.classList.remove('d1', 'd2');
-      el.classList.add('stump');
-      this.treeEls.delete(i);
+    const b = treeBox(this.world, i, this.seed);
+    if (!this.far) {
+      const fall = document.createElement('i');
+      fall.className = `tr falling k${this.world.treeKind[i] & 3}`;
+      fall.style.cssText = `position:absolute;left:${b.x + 4}px;top:${b.y + 8}px;z-index:${b.y + 60}`;
+      this.objLayer.appendChild(fall);
+      setTimeout(() => fall.remove(), 1100);
     }
-    const x = i % this.world.w, y = Math.floor(i / this.world.w);
-    const c = this.chunks[Math.floor(x / CH) + Math.floor(y / CH) * this.cols];
-    if (c) c.farDirty = true;
+    this.stumps.add(i);
+    this.dirtyAround(i);
   }
 
-  /** Árvore sendo trabalhada (balança). */
-  shake(i: number) {
-    const el = this.treeEls.get(i);
-    if (!el) return;
-    if ((el as any)._shk && (el as any)._shk > performance.now()) return;
-    (el as any)._shk = performance.now() + 320;
-    // tremor lateral (translate) para não sobrescrever o tamanho/inclinação da árvore
-    el.animate([{ translate: '0 0' }, { translate: '2px 0' }, { translate: '-2px 0' }, { translate: '0 0' }], { duration: 300 });
-  }
+  /** Árvore sendo trabalhada: o cenário é pintado, então não há balanço. */
+  shake(_i: number) {}
 }

@@ -46,6 +46,12 @@ import salinosLand from './assets/factions/salinos-land.webp';
 
 
 const app = document.querySelector<HTMLElement>('#app')!;
+
+// iPhone: o navegador não pode dar zoom na página (pinça, toque duplo ou segurar num botão).
+// O zoom do jogo é só o da câmera; o da página não tinha como voltar.
+for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', (e) => { if ((e as TouchEvent & { scale?: number }).scale !== undefined && (e as any).scale !== 1) e.preventDefault(); }, { passive: false });
+document.addEventListener('contextmenu', (e) => { if (!(e.target as HTMLElement).closest('input,textarea')) e.preventDefault(); });
 const esc = (s: string) => s.replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]!));
 let dispose: (() => void) | undefined;
 let faction: FactionId = 'valmir';
