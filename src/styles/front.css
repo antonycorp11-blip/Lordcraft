@@ -2,8 +2,9 @@
    arte grande do povo e um botão "Jogar". Opções da partida ficam recolhidas. */
 .lobby {
   position: relative;
-  min-height: 100%;
-  overflow: auto;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: #0b1214;
   color: #eee6cd;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;

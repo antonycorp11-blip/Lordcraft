@@ -55,3 +55,97 @@
 .ico.ico-shop{background:url('../assets/sprites/ui_hero.webp') 66.667% 100.000%/400% 300% no-repeat}
 .ico.ico-drop{background:url('../assets/sprites/ui_hero.webp') 100.000% 100.000%/400% 300% no-repeat}
 .ico.ico-silver>i,.ico.ico-silver::before,.ico.ico-silver::after,.ico.ico-wood>i,.ico.ico-wood::before,.ico.ico-wood::after,.ico.ico-aether>i,.ico.ico-aether::before,.ico.ico-aether::after,.ico.ico-supply>i,.ico.ico-supply::before,.ico.ico-supply::after,.ico.ico-house>i,.ico.ico-house::before,.ico.ico-house::after,.ico.ico-upkeep>i,.ico.ico-upkeep::before,.ico.ico-upkeep::after,.ico.ico-move>i,.ico.ico-move::before,.ico.ico-move::after,.ico.ico-stop>i,.ico.ico-stop::before,.ico.ico-stop::after,.ico.ico-hold>i,.ico.ico-hold::before,.ico.ico-hold::after,.ico.ico-attack>i,.ico.ico-attack::before,.ico.ico-attack::after,.ico.ico-amove>i,.ico.ico-amove::before,.ico.ico-amove::after,.ico.ico-patrol>i,.ico.ico-patrol::before,.ico.ico-patrol::after,.ico.ico-rally>i,.ico.ico-rally::before,.ico.ico-rally::after,.ico.ico-build>i,.ico.ico-build::before,.ico.ico-build::after,.ico.ico-hammer>i,.ico.ico-hammer::before,.ico.ico-hammer::after,.ico.ico-deliver>i,.ico.ico-deliver::before,.ico.ico-deliver::after,.ico.ico-retreat>i,.ico.ico-retreat::before,.ico.ico-retreat::after,.ico.ico-back>i,.ico.ico-back::before,.ico.ico-back::after,.ico.ico-learn>i,.ico.ico-learn::before,.ico.ico-learn::after,.ico.ico-upgrade>i,.ico.ico-upgrade::before,.ico.ico-upgrade::after,.ico.ico-tome>i,.ico.ico-tome::before,.ico.ico-tome::after,.ico.ico-cancel>i,.ico.ico-cancel::before,.ico.ico-cancel::after,.ico.ico-brick>i,.ico.ico-brick::before,.ico.ico-brick::after,.ico.ico-idle>i,.ico.ico-idle::before,.ico.ico-idle::after,.ico.ico-army>i,.ico.ico-army::before,.ico.ico-army::after,.ico.ico-heal>i,.ico.ico-heal::before,.ico.ico-heal::after,.ico.ico-guard>i,.ico.ico-guard::before,.ico.ico-guard::after,.ico.ico-banner>i,.ico.ico-banner::before,.ico.ico-banner::after,.ico.ico-shield>i,.ico.ico-shield::before,.ico.ico-shield::after,.ico.ico-star>i,.ico.ico-star::before,.ico.ico-star::after,.ico.ico-orb>i,.ico.ico-orb::before,.ico.ico-orb::after,.ico.ico-shop>i,.ico.ico-shop::before,.ico.ico-shop::after,.ico.ico-drop>i,.ico.ico-drop::before,.ico.ico-drop::after{display:none!important}
+
+/* ---------- HUD com a arte gerada (ui_btn, ui_frame, ui_panel) ---------- */
+.hud .cb,
+.hud .tb,
+.hud .sb,
+.hud .touchbar button {
+  border: 0;
+  background: url('../assets/sprites/ui_btn.webp') 0% 0% / 400% 200% no-repeat;
+}
+.hud .cb:hover,
+.hud .tb:hover,
+.hud .sb:hover,
+.hud .touchbar button:hover {
+  background-color: transparent;
+  background-position: 33.333% 0%;
+}
+.hud .cb:active,
+.hud .tb:active,
+.hud .sb:active,
+.hud .touchbar button:active {
+  background-position: 66.667% 0%;
+}
+.hud .cb.dis {
+  opacity: 1;
+  filter: none;
+  background-position: 100% 0%;
+}
+.hud .cb.dis > * {
+  opacity: 0.5;
+}
+.hud .cb.act,
+.hud .touchbar button.on {
+  background-position: 33.333% 0%;
+  box-shadow: none;
+}
+.hud .cb .portrait,
+.hud .cb > .ico {
+  position: relative;
+}
+
+/* retrato da seleção: moldura dourada por cima */
+.hud .por {
+  border: 0;
+}
+.hud .por::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: url('../assets/sprites/ui_frame.webp') 0% 0% / 300% 200% no-repeat;
+}
+
+/* minimapa com moldura ornamentada */
+.hud .mm-wrap {
+  position: relative;
+  border: 0;
+  background: #0b1214;
+}
+.hud .mm-wrap::after {
+  content: '';
+  position: absolute;
+  inset: -6%;
+  pointer-events: none;
+  background: url('../assets/sprites/ui_panel.webp') 0% 0% / 200% 200% no-repeat;
+}
+
+/* anéis de seleção no chão */
+.u .ring {
+  left: -26px;
+  top: -40px;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: url('../assets/sprites/ui_frame.webp') 0% 100% / 300% 200% no-repeat;
+}
+.u.sel .ring {
+  border: 0;
+}
+.u.r-foe .ring {
+  background-position: 50% 100%;
+}
+.u.hero .ring {
+  left: -32px;
+  top: -48px;
+  width: 64px;
+  height: 64px;
+  background-position: 100% 100%;
+}
+.u.hov:not(.sel) .ring {
+  opacity: 0.55;
+}
