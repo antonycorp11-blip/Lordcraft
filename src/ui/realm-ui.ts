@@ -12,6 +12,7 @@ import { armyDays, armyPos, armyPower, autoResolve, formArmy, playerPower } from
 import { addOrder, buyDebt, debtPrice, localBuy, localSell, playerCaravan } from '../realm/actions';
 import { COUNCIL_INFO, GOODS, GOOD_NAMES, PERSONALITY_INFO, TITLE_NAMES, type CouncilSeat, type Crest, type Good, type House, type LetterKind, type Person, type Realm } from '../realm/types';
 import { seasonLabel } from '../realm/tick';
+import { ballMood, provinceAt, realmColor, realmMapImage, topOf } from './realm-map';
 
 // Tela do feudo: mapa estratégico, casas nobres, cartas, mercado, exército, dinastia,
 // governo e crônica. Abre por cima do mapa da província e pausa o tempo enquanto aberta.
@@ -138,17 +139,19 @@ export class RealmUI {
   // ---------- Mapa ----------
   private mapTab(): string {
     const r = this.r;
-    const roads = r.roads.map((x) => {
-      const a = r.provinces[x.a], b = r.provinces[x.b];
-      return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" class="${x.danger >= 0.09 ? 'danger' : ''}"/>`;
-    }).join('');
-    const labels = r.roads.map((x) => {
-      const a = r.provinces[x.a], b = r.provinces[x.b];
-      return `<span class="rd" style="left:${(a.x + b.x) / 2}%;top:${(a.y + b.y) / 2}%">${x.days}d</span>`;
-    }).join('');
-    const nodes = Object.values(r.provinces).map((p) => {
+    const url = realmMapImage(r);
+    const me = r.provinces[home(r).id];
+    const balls = Object.values(r.provinces).map((p) => {
       const h = r.houses[p.owner];
-      return `<button class="prov ${p.id === this.sel ? 'sel' : ''} ${p.owner === r.player ? 'mine' : ''}" data-prov="${p.id}" style="left:${p.x}%;top:${p.y}%">${crestHTML(h.crest)}<span>${esc(p.name)}</span>${this.relChip(h)}</button>`;
+      const mood = ballMood(r, h);
+      // os olhos olham para a sua província (a sua olha para a selecionada)
+      const tgt = mood === 'me' ? (this.sel && r.provinces[this.sel] ? r.provinces[this.sel] : { x: 50, y: 50 }) : me;
+      const dx = tgt.x - p.x, dy = tgt.y - p.y, len = Math.hypot(dx, dy) || 1;
+      const look = `translate(${((dx / len) * 2.2).toFixed(1)}px,${((dy / len) * 2.2).toFixed(1)}px)`;
+      const top = topOf(r, p.owner);
+      return `<button class="ball m-${mood} ${p.id === this.sel ? 'sel' : ''}" data-prov="${p.id}" style="left:${p.x}%;top:${p.y}%;--c1:${h.crest.c1};--c2:${h.crest.c2}" aria-label="${esc(p.name)}">
+        <i class="bf cp-${h.crest.pattern}"></i><i class="eye l"><b style="transform:${look}"></b></i><i class="eye r"><b style="transform:${look}"></b></i><i class="brow"></i>${mood === 'me' || (h.title === 'rei') ? '<i class="crown">♛\uFE0E</i>' : ''}
+        <span class="bname ${top === r.player ? 'mine' : ''}">${esc(p.name)}</span></button>`;
     }).join('');
     const tokens = [
       ...r.caravans.map((c) => { const q = caravanPos(r, c); return `<i class="tok car ${c.owner === r.player ? 'mine' : ''}" style="left:${q.x}%;top:${q.y}%" title="Caravana"></i>`; }),
@@ -159,8 +162,16 @@ export class RealmUI {
         return `<i class="tok letter" style="left:${from.x + (to.x - from.x) * t}%;top:${from.y + (to.y - from.y) * t}%" title="Mensageiro"></i>`;
       }),
     ].join('');
-    return `<div class="fmap"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${roads}</svg>${labels}${tokens}${nodes}</div>
-      <p class="hint legend"><i class="tok car mine"></i> caravana <i class="tok army mine"></i> seu exército <i class="tok army foe"></i> inimigo <i class="tok letter"></i> mensageiro · estradas tracejadas são perigosas</p>
+    // legenda: os reinos (casas no topo) e quantas províncias cada um tem
+    const tops = new Map<string, number>();
+    for (const p of Object.values(r.provinces)) { const t = topOf(r, p.owner); tops.set(t, (tops.get(t) ?? 0) + 1); }
+    const legend = [...tops].sort((a, b) => b[1] - a[1]).map(([id, n]) => {
+      const [cr, cg, cb] = realmColor(r, id);
+      return `<span class="lg ${id === r.player ? 'mine' : ''}"><i style="background:rgb(${cr},${cg},${cb})"></i>${id === r.player ? `Seu reino · ${n} ${n === 1 ? 'província' : 'províncias'}` : `Casa ${esc(r.houses[id].name)}`}</span>`;
+    }).join('');
+    return `<div class="fmap pol" data-map style="background-image:url('${url}')">${tokens}${balls}</div>
+      <div class="map-legend">${legend}</div>
+      <p class="hint legend"><i class="tok car mine"></i> caravana <i class="tok army mine"></i> seu exército <i class="tok army foe"></i> inimigo <i class="tok letter"></i> mensageiro · cada cor é um reino; tracejado vermelho = estrada perigosa</p>
       ${this.sel ? this.provPanel(this.sel) : '<p class="hint">Toque numa província para ver quem a governa e agir.</p>'}`;
   }
 
@@ -399,6 +410,13 @@ export class RealmUI {
   private say(t: string) { if (t) this.host.feedback(t); }
 
   private click(e: Event) {
+    const mapEl = (e.target as HTMLElement).closest<HTMLElement>('[data-map]');
+    if (mapEl && !(e.target as HTMLElement).closest('button')) {
+      const b = mapEl.getBoundingClientRect(), me = e as MouseEvent;
+      const id = provinceAt(this.r, ((me.clientX - b.left) / b.width) * 100, ((me.clientY - b.top) / b.height) * 100);
+      if (id) { this.sel = id; this.render(); }
+      return;
+    }
     const t = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
     if (!t || t.disabled) return;
     const r = this.r, g = this.s.g, d = t.dataset;

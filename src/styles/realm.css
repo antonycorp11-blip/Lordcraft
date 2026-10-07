@@ -22,18 +22,18 @@
   margin-top: -14%;
   text-shadow: 0 0 2px #000c, 0 1px 1px #000c;
 }
-.crest.cp-party { background: linear-gradient(90deg, var(--c1) 50%, var(--c2) 50%); }
-.crest.cp-fess { background: linear-gradient(180deg, var(--c1) 36%, var(--c2) 36% 60%, var(--c1) 60%); }
-.crest.cp-pale { background: linear-gradient(90deg, var(--c1) 36%, var(--c2) 36% 64%, var(--c1) 64%); }
-.crest.cp-bend { background: linear-gradient(135deg, var(--c1) 38%, var(--c2) 38% 58%, var(--c1) 58%); }
-.crest.cp-chief { background: linear-gradient(180deg, var(--c2) 30%, var(--c1) 30%); }
-.crest.cp-quarter { background: conic-gradient(from 0deg at 50% 45%, var(--c2) 0 25%, var(--c1) 0 50%, var(--c2) 0 75%, var(--c1) 0); }
-.crest.cp-cross {
+:is(.crest, .ball .bf).cp-party { background: linear-gradient(90deg, var(--c1) 50%, var(--c2) 50%); }
+:is(.crest, .ball .bf).cp-fess { background: linear-gradient(180deg, var(--c1) 36%, var(--c2) 36% 60%, var(--c1) 60%); }
+:is(.crest, .ball .bf).cp-pale { background: linear-gradient(90deg, var(--c1) 36%, var(--c2) 36% 64%, var(--c1) 64%); }
+:is(.crest, .ball .bf).cp-bend { background: linear-gradient(135deg, var(--c1) 38%, var(--c2) 38% 58%, var(--c1) 58%); }
+:is(.crest, .ball .bf).cp-chief { background: linear-gradient(180deg, var(--c2) 30%, var(--c1) 30%); }
+:is(.crest, .ball .bf).cp-quarter { background: conic-gradient(from 0deg at 50% 45%, var(--c2) 0 25%, var(--c1) 0 50%, var(--c2) 0 75%, var(--c1) 0); }
+:is(.crest, .ball .bf).cp-cross {
   background:
     linear-gradient(90deg, transparent 40%, var(--c2) 40% 60%, transparent 60%),
     linear-gradient(180deg, var(--c1) 34%, var(--c2) 34% 52%, var(--c1) 52%);
 }
-.crest.cp-chevron {
+:is(.crest, .ball .bf).cp-chevron {
   background:
     linear-gradient(to top right, transparent 46%, var(--c2) 46% 62%, transparent 62%) left bottom / 50% 70% no-repeat,
     linear-gradient(to top left, transparent 46%, var(--c2) 46% 62%, transparent 62%) right bottom / 50% 70% no-repeat,
@@ -381,4 +381,81 @@
   .feudo-mode .hud-top .r-upkeep,
   .feudo-mode .hud-top .r-season { display: none; }
   .hud .quest { top: calc(var(--gap) + 40px); font-size: 10px; padding: 3px 10px; }
+}
+
+/* ---------- Mapa político: território desenhado + countryballs ---------- */
+.fmap.pol { background-color: #264e62; background-size: 100% 100%; border-color: #c9b98a55; }
+.realm .ball {
+  position: absolute;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  translate: -50% -55%;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  box-shadow: none;
+  transition: scale 0.15s;
+}
+.realm .ball:hover, .realm .ball.sel { scale: 1.22; z-index: 3; }
+.ball .bf {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgb(20 12 6 / 0.8);
+  border-radius: 50%;
+  background: var(--c1);
+  box-shadow: inset -4px -5px 0 rgb(0 0 0 / 0.28), inset 3px 3px 0 rgb(255 255 255 / 0.2), 0 3px 5px rgb(0 0 0 / 0.5);
+}
+.ball .eye {
+  position: absolute;
+  top: 30%;
+  width: 27%;
+  height: 31%;
+  border: 1.5px solid #111;
+  border-radius: 50%;
+  background: #fff;
+  overflow: hidden;
+}
+.ball .eye.l { left: 19%; }
+.ball .eye.r { right: 19%; }
+.ball .eye b { position: absolute; left: 28%; top: 26%; width: 44%; height: 48%; border-radius: 50%; background: #111; }
+.ball .brow { display: none; }
+.ball .crown { position: absolute; top: -15px; left: 50%; translate: -50% 0; color: #f2c94c; font: 700 17px Georgia, serif; text-shadow: 0 1px 2px #000; }
+.ball .bname {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  translate: -50% 3px;
+  color: #fff;
+  font: 700 10px/1.1 system-ui, sans-serif;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000, 0 0 4px #000;
+  pointer-events: none;
+}
+.ball .bname.mine { color: #ffe08a; }
+/* você: anel dourado */
+.ball.m-me .bf { box-shadow: 0 0 0 3px #f2c94c, inset -4px -5px 0 rgb(0 0 0 / 0.28), inset 3px 3px 0 rgb(255 255 255 / 0.2), 0 3px 6px rgb(0 0 0 / 0.5); }
+/* guerra: olhos apertados e sobrancelhas bravas */
+.ball.m-war .eye { top: 38%; height: 20%; }
+.ball.m-war .brow { display: block; position: absolute; top: 27%; left: 15%; right: 15%; height: 0; }
+.ball.m-war .brow::before, .ball.m-war .brow::after { content: ''; position: absolute; top: 0; width: 38%; height: 3px; border-radius: 2px; background: #111; }
+.ball.m-war .brow::before { left: 0; rotate: 22deg; }
+.ball.m-war .brow::after { right: 0; rotate: -22deg; }
+.ball.m-war .bf { border-color: #b3261e; }
+/* aliado: olhos sorrindo */
+.ball.m-ally .eye { top: 36%; height: 16%; border: 0; border-top: 2.5px solid #111; border-radius: 50% 50% 0 0; background: none; }
+.ball.m-ally .eye b { display: none; }
+/* vassalo: menor, olha para cima */
+.ball.m-vassal { width: 28px; height: 28px; }
+.ball.m-vassal .eye b { top: 4%; }
+/* suserano: monóculo dourado */
+.ball.m-lord .eye.r { border: 2.5px solid #c9a227; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 4px 0 2px; font: 600 11px system-ui, sans-serif; color: var(--dim); }
+.map-legend .lg i { display: inline-block; width: 11px; height: 11px; margin-right: 5px; border-radius: 3px; vertical-align: -1px; border: 1px solid #0006; }
+.map-legend .lg.mine { color: var(--gold); }
+@media (max-width: 620px), (pointer: coarse) and (max-height: 500px) {
+  .realm .ball { width: 28px; height: 28px; }
+  .realm .ball.m-vassal { width: 24px; height: 24px; }
+  .ball .bname { font-size: 9px; }
 }

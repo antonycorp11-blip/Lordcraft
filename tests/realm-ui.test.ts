@@ -25,9 +25,10 @@ describe('tela do feudo', () => {
       ui.show(tab);
       expect(root.querySelector('.realm-body')!.innerHTML.length, tab).toBeGreaterThan(40);
     }
-    expect(root.querySelectorAll('.prov').length).toBe(0); // aba atual é a crônica
+    expect(root.querySelectorAll('.ball').length).toBe(0); // aba atual é a crônica
     ui.show('mapa');
-    expect(root.querySelectorAll('.prov').length).toBe(8);
+    expect(root.querySelectorAll('.ball').length).toBe(8);
+    expect(root.querySelectorAll('.ball.m-me').length).toBe(1);
     (root.querySelector('[data-r=close]') as HTMLElement).click();
     expect(s.paused).toBe(false);
   });
