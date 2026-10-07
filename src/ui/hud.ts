@@ -85,6 +85,7 @@ export class Hud {
       <div class="toasts"></div>
       <div class="msgs"></div>
       <div class="side">
+        ${s.g.mode === 'battle' ? '' : `<button class="sb build" data-a="build" title="Construir (B)">${icon('build')}<span>Construir</span></button>`}
         <button class="sb idle" data-a="idle" title="Trabalhador ocioso (.)">${icon('idle')}<b>0</b></button>
         <button class="sb army" data-a="army" title="Selecionar todo o exército">${icon('army')}<b>0</b></button>
         <div class="heroes"></div>
@@ -103,7 +104,6 @@ export class Hud {
       <div class="touchbar">
         <button data-t="mm" title="Mostrar/ocultar minimapa">${icon('map')}</button>
         <button data-t="select" class="tg" title="Arrastar seleciona área">${icon('box')}</button>
-        <button data-t="quick" class="tg on" title="Toque no mapa envia ordens">${icon('tap')}</button>
       </div>
       <div class="placebar"><button data-p="ok">Construir aqui</button><button data-p="cancel">Cancelar</button></div>
       <div class="modebar"><span></span><button data-p="cancel">Cancelar</button></div>
@@ -144,6 +144,7 @@ export class Hud {
       const b = (e.target as HTMLElement).closest('button');
       if (!b) return;
       if (b.dataset.a === 'idle') selectIdleWorker(s);
+      if (b.dataset.a === 'build') this.openBuild();
       if (b.dataset.a === 'army') { selectByClass(s, (u) => u.udef!.cls !== 'worker'); }
       if (b.dataset.hero) {
         const id = Number(b.dataset.hero);
@@ -388,7 +389,6 @@ export class Hud {
       if (!ids.length) continue;
       gh += `<button data-g="${n}" class="${ids.length ? '' : 'empty'}">${n}<b>${ids.length || ''}</b></button>`;
     }
-    if (s.isTouch && ownSelected(s).length) gh += `<span class="gset">${[1, 2, 3, 4, 5].map((n) => `<button class="set" data-g="${n}">+${n}</button>`).join('')}</span>`;
     if (this.el.groups.dataset.sig !== gh) { this.el.groups.dataset.sig = gh; this.el.groups.innerHTML = gh; }
   }
 
@@ -494,13 +494,32 @@ export class Hud {
     this.sig = sig;
     this.el.grid.innerHTML = this.btns.map((b) => `<button data-id="${b.id}" class="cb ${b.disabled ? 'dis' : ''} ${b.active ? 'act' : ''} ${b.auto ? 'auto' : ''}">${b.icon}<kbd>${b.key}</kbd>${b.badge ? `<em>${b.badge}</em>` : ''}<span class="lbl">${b.label}</span></button>`).join('');
     const own = ownSelected(s);
-    this.el.form.hidden = !(own.filter((e) => e.kind === 'unit' && !e.isWorker).length > 1);
+    this.el.form.hidden = s.isTouch || !(own.filter((e) => e.kind === 'unit' && !e.isWorker).length > 1);
     this.root.classList.toggle('nocmd', !this.btns.length);
+  }
+
+  /** Abre o menu de construção com um trabalhador (o selecionado, um ocioso ou o mais próximo). */
+  openBuild() {
+    const s = this.s, g = s.g;
+    let w = ownSelected(s).find((e) => e.isWorker);
+    if (!w) {
+      const [cx, cy] = s.r.cam.center();
+      const ws = g.units.filter((u) => u.alive && u.owner === s.pid && u.isWorker);
+      const idle = ws.filter((u) => !u.order && !u.inside);
+      const pool = idle.length ? idle : ws.filter((u) => !u.inside).length ? ws.filter((u) => !u.inside) : ws;
+      w = pool.sort((a, b) => Math.hypot(a.x - cx, a.y - cy) - Math.hypot(b.x - cx, b.y - cy))[0];
+    }
+    if (!w) { this.feedback('Sem trabalhadores: treine um no paço.'); return; }
+    setSelection(s, [w.id]);
+    this.page = 'build';
+    this.sig = '';
+    s.dirty = true;
   }
 
   hotkey(key: string): boolean {
     const k = key.toUpperCase();
     const b = this.btns.find((x) => x.key === k);
+    if (!b && k === 'B' && this.page !== 'build') { this.openBuild(); return true; }
     if (!b) return false;
     if (b.disabled) { this.feedback(b.reason || 'Indisponível'); return true; }
     b.run();
@@ -575,12 +594,13 @@ export class Hud {
     }
     this.page = 'main';
     const mode = s.mode.k;
-    out.push({ id: 'move', label: 'Mover', key: 'M', icon: icon('move'), active: mode === 'move', desc: 'Move as unidades (sem reagir a inimigos).', run: () => { s.mode = { k: 'move' }; } });
+    const full = !s.isTouch; // no celular tocar no mapa já move/ataca/coleta; o resto fica no teclado
+    if (full) out.push({ id: 'move', label: 'Mover', key: 'M', icon: icon('move'), active: mode === 'move', desc: 'Move as unidades (sem reagir a inimigos).', run: () => { s.mode = { k: 'move' }; } });
     out.push({ id: 'stop', label: 'Parar', key: 'S', icon: icon('stop'), desc: 'Interrompe todas as ordens.', run: () => issueStop(g, s.pid, unitIds) });
-    out.push({ id: 'hold', label: 'Manter posição', key: 'H', icon: icon('hold'), desc: 'Não abandona a posição para perseguir inimigos.', run: () => issueHold(g, s.pid, unitIds, this.input.shift) });
+    if (full) out.push({ id: 'hold', label: 'Manter posição', key: 'H', icon: icon('hold'), desc: 'Não abandona a posição para perseguir inimigos.', run: () => issueHold(g, s.pid, unitIds, this.input.shift) });
     if (own.some((e) => e.udef?.attack)) out.push({ id: 'amove', label: 'Atacar', key: 'A', icon: icon('attack'), active: mode === 'amove', desc: 'Ataca um alvo ou avança atacando o que encontrar.', run: () => { s.mode = { k: 'amove' }; } });
-    out.push({ id: 'patrol', label: 'Patrulhar', key: 'P', icon: icon('patrol'), active: mode === 'patrol', desc: 'Patrulha entre a posição atual e o destino.', run: () => { s.mode = { k: 'patrol' }; } });
-    if (!worker || own.some((e) => !e.isWorker)) {
+    if (full) out.push({ id: 'patrol', label: 'Patrulhar', key: 'P', icon: icon('patrol'), active: mode === 'patrol', desc: 'Patrulha entre a posição atual e o destino.', run: () => { s.mode = { k: 'patrol' }; } });
+    if (full && (!worker || own.some((e) => !e.isWorker))) {
       out.push({ id: 'guard', label: 'Defender região', key: 'G', icon: icon('guard'), active: mode === 'guard', desc: 'Defende uma área: ataca invasores e retorna.', run: () => { s.mode = { k: 'guard' }; } });
       out.push({ id: 'retreat', label: 'Recuar', key: 'X', icon: icon('retreat'), desc: 'Retirada organizada até o centro mais próximo, sem revidar.', run: () => issueRetreat(g, s.pid, unitIds) });
     }

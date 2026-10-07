@@ -1255,3 +1255,22 @@
     height: 34px;
   }
 }
+
+/* Construir: sempre à mão, no topo da coluna lateral */
+.hud .sb.build {
+  border-color: var(--gold);
+  background: rgb(60 48 22 / 0.88);
+}
+.hud .sb.build span {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  translate: -50% 0;
+  color: var(--gold);
+  font: 600 9px/12px system-ui, sans-serif;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000;
+}
+.hud .sb.build + .sb { margin-top: 10px; }
+/* no celular, pausar fica no menu */
+.touch .hud .tb[data-a='pause'] { display: none; }

@@ -92,3 +92,29 @@ describe('HUD no modo feudo', () => {
     expect((root.querySelector('.tb.feudo .badge') as HTMLElement).hidden).toBe(false); // carta de boas-vindas
   });
 });
+
+describe('botão Construir', () => {
+  it('sem nada selecionado, escolhe um trabalhador e mostra as construções; no celular sobra só o essencial', async () => {
+    const { Hud } = await import('../src/ui/hud');
+    const { game: g } = createCampaign({ lordName: 'Aldo', houseName: 'Ravel', crest: { c1: '#123', c2: '#eee', pattern: 'cross', charge: '✦' }, female: false, seed: 5, faction: 'valmir' });
+    const root = document.createElement('div');
+    document.body.appendChild(root);
+    const s = { g, r: { selected: new Set(), cam: { centerOn() {}, center: () => [g.players[0].startX, g.players[0].startY] } }, pid: 0, selection: [], groups: Array.from({ length: 10 }, () => []), mode: { k: 'none' }, formation: 'block', speed: 1, paused: false, quality: 'media', isTouch: true, touchSelectMode: false, quickOrders: true, subgroup: '', lastAlert: null, dirty: true, onExit() {} } as any;
+    const hud = new Hud(s, root);
+    hud.input = { shift: false, updatePlacement() {} } as any;
+    hud.update(1000);
+    (root.querySelector('.sb.build') as HTMLElement).click();
+    hud.update(2000);
+    expect(g.ents.get(s.selection[0])!.isWorker).toBe(true);
+    const ids = [...root.querySelectorAll<HTMLElement>('.cmds .grid button')].map((b) => b.dataset.id);
+    expect(ids).toContain('b:v_casa');
+    expect(ids).toContain('b:v_quartel');
+    // volta ao menu principal do trabalhador: sem Mover/Patrulhar/Manter no celular
+    (root.querySelector('[data-id=back]') as HTMLElement).click();
+    hud.update(3000);
+    const main = [...root.querySelectorAll<HTMLElement>('.cmds .grid button')].map((b) => b.dataset.id);
+    expect(main).toContain('build');
+    expect(main).not.toContain('move');
+    expect(main).not.toContain('patrol');
+  });
+});
