@@ -7,6 +7,7 @@ import { TerrainView } from './terrain';
 import { buildingClass, buildingHTML, resourceHTML, unitClass, unitHTML, unitScale } from './views';
 import { applySheetStyle, spriteFrame, spriteSheetFor, spriteState, type SpriteDir, type WorkKind } from './sprite-anim';
 import { Weather } from './weather';
+import { applyAtlasStyle, atlasPosition, buildingAtlas, buildingFrame, resourceAtlas, resourceFrame } from './atlas';
 
 // Renderizador DOM/CSS. Lê o estado da simulação; nunca o modifica.
 
@@ -30,6 +31,8 @@ interface View {
   spr?: HTMLElement;     // quadro da folha de animação (sprite-anim)
   sprPos?: string;
   sprMode?: string;
+  atl?: HTMLElement;      // quadro da folha de construção/recurso
+  atlPos?: string;
   sprDir?: SpriteDir;     // última direção de movimento (para ficar parado na mesma pose)
   lx?: number; ly?: number; // última posição desenhada (px)
   stride?: number;          // distância andada: avança o ciclo de caminhada
@@ -378,7 +381,14 @@ export class Renderer {
       });
       v.hpB = v.el.querySelector('.hp b') as HTMLElement;
       v.progB = v.el.querySelector('.prog b') as HTMLElement;
-      v.cls = ''; v.tx = ''; v.hp = -1; v.prog = -2;
+      v.cls = ''; v.tx = ''; v.hp = -1; v.prog = -2; v.atlPos = '';
+      const ba = buildingAtlas(b.type);
+      if (ba && !v.atl) {
+        v.atl = document.createElement('i');
+        v.atl.className = 'atl';
+        v.el.prepend(v.atl);
+        applyAtlasStyle(v.atl, ba, b.size, TILE);
+      }
       if (!v.light) {
         v.light = document.createElement('i');
         v.light.className = `lt a-${BUILDINGS[b.type].arch} s${b.size}`;
@@ -407,6 +417,12 @@ export class Renderer {
     if (b.bqueue.length) cls += ' busy';
     if (b.upgrading) cls += ' upg';
     if (b.alive && (hr < 0.999 || this.showAllHp)) cls += ' dmg';
+    const ba = v.atl ? buildingAtlas(b.type) : undefined;
+    if (ba) {
+      cls += ' atl-on';
+      const pos = atlasPosition(ba, buildingFrame({ alive: b.alive, built: b.built, progress: b.progress, hpRatio: hr, night: this.lastDark > 0.45, id: b.id }, this.now));
+      if (pos !== v.atlPos) { v.atl!.style.backgroundPosition = pos; v.atlPos = pos; }
+    }
     if (cls !== v.cls) { v.el.className = cls; v.cls = cls; }
     const hp = Math.round(hr * 50) / 50;
     if (hp !== v.hp) { v.hpB!.style.transform = `scaleX(${hp})`; v.hp = hp; v.hpB!.className = hp < 0.35 ? 'lo' : hp < 0.65 ? 'mid' : ''; }
@@ -451,7 +467,14 @@ export class Renderer {
         el.innerHTML = resourceHTML(r.kind as 'mine' | 'crystal');
         return el;
       });
-      v.cls = ''; v.tx = '';
+      v.cls = ''; v.tx = ''; v.atlPos = '';
+      const ra = resourceAtlas(r.kind);
+      if (ra && !v.atl) {
+        v.atl = document.createElement('i');
+        v.atl.className = 'atl';
+        v.el.prepend(v.atl);
+        applyAtlasStyle(v.atl, ra, r.size, TILE);
+      }
       this.views.set(r.id, v);
     }
     v.seen = f;
@@ -459,6 +482,11 @@ export class Renderer {
     if (tx !== v.tx) { v.el.style.transform = tx; v.tx = tx; v.el.style.zIndex = String((r.ty + r.size) * TILE - 4); }
     const lvl = r.amount > 8000 ? 3 : r.amount > 3000 ? 2 : 1;
     let cls = `res ${r.kind} l${lvl}${r.workers ? ' busy' : ''}${r.extractor ? ' ext' : ''}`;
+    if (v.atl) {
+      cls += ' atl-on';
+      const pos = atlasPosition(resourceAtlas(r.kind)!, resourceFrame(r.kind, r.amount, this.now, r.id));
+      if (pos !== v.atlPos) { v.atl.style.backgroundPosition = pos; v.atlPos = pos; }
+    }
     if (this.selected.has(r.id)) cls += ' sel';
     if (this.hover === r.id) cls += ' hov';
     if (cls !== v.cls) { v.el.className = cls; v.cls = cls; }

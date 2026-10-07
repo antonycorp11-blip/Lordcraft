@@ -1,0 +1,57 @@
+/* atlas.css — GERADO em parte: arte das folhas em src/assets/sprites (tools/sprites/atlas.json). */
+/* Construções e recursos com folha: a arte nova substitui as camadas antigas */
+.bd .atl,.res .atl{position:absolute;display:none;background-repeat:no-repeat;pointer-events:none}
+.bd.atl-on .atl,.res.atl-on .atl{display:block}
+.bd.atl-on .st,.bd.atl-on .base,.bd.atl-on .smoke,.bd.atl-on .fire,.bd.atl-on .scaf{display:none}
+.res.atl-on .sprite-prop,.res.atl-on .mound,.res.atl-on .cave,.res.atl-on .ore,.res.atl-on .beam,.res.atl-on .cr,.res.atl-on .cglow{display:none}
+
+/* Árvores: quatro espécies, 20 quadros cada (0-11 vento, 12 parada, 13-14 cortada, 15 toco, 16-19 queda) */
+.tr.k0,.tr.stump.k0{background-image:url('../assets/sprites/t_oak.webp')}
+.tr.k1,.tr.stump.k1{background-image:url('../assets/sprites/t_pine.webp')}
+.tr.k2,.tr.stump.k2{background-image:url('../assets/sprites/t_maple.webp')}
+.tr.k3,.tr.stump.k3{background-image:url('../assets/sprites/t_frost.webp')}
+.tr,.tr:not(.stump),.tr.stump{width:78px;height:78px;margin:-8px 0 0 -4px;border:0;filter:none;rotate:0deg;background-size:2000% 100%;background-repeat:no-repeat;background-position:63.1579% 0;animation:none}
+.tr::before,.tr::after,.tr:not(.stump)::before,.tr:not(.stump)::after{display:none}
+.tr.d1{background-position:68.4211% 0}
+.tr.d2{background-position:73.6842% 0}
+.tr.stump{background-position:78.9474% 0}
+.q-high .tr:not(.stump):not(.d1):not(.d2):not(.falling){animation:tree-wind 1.6s steps(12) infinite;animation-delay:inherit}
+@keyframes tree-wind{from{background-position-x:0%}to{background-position-x:63.1579%}}
+.tr.falling{background-position:84.2105% 0;animation:tree-topple .7s steps(4) forwards!important}
+@keyframes tree-topple{from{background-position-x:84.2105%;opacity:1}90%{opacity:1}to{background-position-x:105.2632%;opacity:0}}
+
+/* Ícones do HUD com a arte nova (os que não estão aqui continuam desenhados em CSS) */
+.ico.ico-silver{background:url('../assets/sprites/ui_res.webp') 0.000% 0.000%/300% 200% no-repeat}
+.ico.ico-wood{background:url('../assets/sprites/ui_res.webp') 50.000% 0.000%/300% 200% no-repeat}
+.ico.ico-aether{background:url('../assets/sprites/ui_res.webp') 100.000% 0.000%/300% 200% no-repeat}
+.ico.ico-supply{background:url('../assets/sprites/ui_res.webp') 0.000% 100.000%/300% 200% no-repeat}
+.ico.ico-house{background:url('../assets/sprites/ui_res.webp') 0.000% 100.000%/300% 200% no-repeat}
+.ico.ico-upkeep{background:url('../assets/sprites/ui_res.webp') 50.000% 100.000%/300% 200% no-repeat}
+.ico.ico-move{background:url('../assets/sprites/ui_cmd.webp') 0.000% 0.000%/400% 300% no-repeat}
+.ico.ico-stop{background:url('../assets/sprites/ui_cmd.webp') 33.333% 0.000%/400% 300% no-repeat}
+.ico.ico-hold{background:url('../assets/sprites/ui_cmd.webp') 66.667% 0.000%/400% 300% no-repeat}
+.ico.ico-attack{background:url('../assets/sprites/ui_cmd.webp') 100.000% 0.000%/400% 300% no-repeat}
+.ico.ico-amove{background:url('../assets/sprites/ui_cmd.webp') 0.000% 50.000%/400% 300% no-repeat}
+.ico.ico-patrol{background:url('../assets/sprites/ui_cmd.webp') 33.333% 50.000%/400% 300% no-repeat}
+.ico.ico-rally{background:url('../assets/sprites/ui_cmd.webp') 66.667% 50.000%/400% 300% no-repeat}
+.ico.ico-build{background:url('../assets/sprites/ui_cmd.webp') 100.000% 50.000%/400% 300% no-repeat}
+.ico.ico-hammer{background:url('../assets/sprites/ui_cmd.webp') 0.000% 100.000%/400% 300% no-repeat}
+.ico.ico-deliver{background:url('../assets/sprites/ui_cmd.webp') 66.667% 100.000%/400% 300% no-repeat}
+.ico.ico-retreat{background:url('../assets/sprites/ui_cmd.webp') 100.000% 100.000%/400% 300% no-repeat}
+.ico.ico-back{background:url('../assets/sprites/ui_cmd.webp') 100.000% 100.000%/400% 300% no-repeat}
+.ico.ico-learn{background:url('../assets/sprites/ui_eco.webp') 66.667% 0.000%/400% 300% no-repeat}
+.ico.ico-upgrade{background:url('../assets/sprites/ui_eco.webp') 33.333% 0.000%/400% 300% no-repeat}
+.ico.ico-tome{background:url('../assets/sprites/ui_eco.webp') 66.667% 0.000%/400% 300% no-repeat}
+.ico.ico-cancel{background:url('../assets/sprites/ui_eco.webp') 100.000% 0.000%/400% 300% no-repeat}
+.ico.ico-brick{background:url('../assets/sprites/ui_eco.webp') 0.000% 50.000%/400% 300% no-repeat}
+.ico.ico-idle{background:url('../assets/sprites/ui_eco.webp') 66.667% 100.000%/400% 300% no-repeat}
+.ico.ico-army{background:url('../assets/sprites/ui_eco.webp') 100.000% 100.000%/400% 300% no-repeat}
+.ico.ico-heal{background:url('../assets/sprites/ui_hero.webp') 0.000% 0.000%/400% 300% no-repeat}
+.ico.ico-guard{background:url('../assets/sprites/ui_hero.webp') 33.333% 0.000%/400% 300% no-repeat}
+.ico.ico-banner{background:url('../assets/sprites/ui_hero.webp') 66.667% 0.000%/400% 300% no-repeat}
+.ico.ico-shield{background:url('../assets/sprites/ui_hero.webp') 33.333% 50.000%/400% 300% no-repeat}
+.ico.ico-star{background:url('../assets/sprites/ui_hero.webp') 0.000% 100.000%/400% 300% no-repeat}
+.ico.ico-orb{background:url('../assets/sprites/ui_hero.webp') 33.333% 100.000%/400% 300% no-repeat}
+.ico.ico-shop{background:url('../assets/sprites/ui_hero.webp') 66.667% 100.000%/400% 300% no-repeat}
+.ico.ico-drop{background:url('../assets/sprites/ui_hero.webp') 100.000% 100.000%/400% 300% no-repeat}
+.ico.ico-silver>i,.ico.ico-silver::before,.ico.ico-silver::after,.ico.ico-wood>i,.ico.ico-wood::before,.ico.ico-wood::after,.ico.ico-aether>i,.ico.ico-aether::before,.ico.ico-aether::after,.ico.ico-supply>i,.ico.ico-supply::before,.ico.ico-supply::after,.ico.ico-house>i,.ico.ico-house::before,.ico.ico-house::after,.ico.ico-upkeep>i,.ico.ico-upkeep::before,.ico.ico-upkeep::after,.ico.ico-move>i,.ico.ico-move::before,.ico.ico-move::after,.ico.ico-stop>i,.ico.ico-stop::before,.ico.ico-stop::after,.ico.ico-hold>i,.ico.ico-hold::before,.ico.ico-hold::after,.ico.ico-attack>i,.ico.ico-attack::before,.ico.ico-attack::after,.ico.ico-amove>i,.ico.ico-amove::before,.ico.ico-amove::after,.ico.ico-patrol>i,.ico.ico-patrol::before,.ico.ico-patrol::after,.ico.ico-rally>i,.ico.ico-rally::before,.ico.ico-rally::after,.ico.ico-build>i,.ico.ico-build::before,.ico.ico-build::after,.ico.ico-hammer>i,.ico.ico-hammer::before,.ico.ico-hammer::after,.ico.ico-deliver>i,.ico.ico-deliver::before,.ico.ico-deliver::after,.ico.ico-retreat>i,.ico.ico-retreat::before,.ico.ico-retreat::after,.ico.ico-back>i,.ico.ico-back::before,.ico.ico-back::after,.ico.ico-learn>i,.ico.ico-learn::before,.ico.ico-learn::after,.ico.ico-upgrade>i,.ico.ico-upgrade::before,.ico.ico-upgrade::after,.ico.ico-tome>i,.ico.ico-tome::before,.ico.ico-tome::after,.ico.ico-cancel>i,.ico.ico-cancel::before,.ico.ico-cancel::after,.ico.ico-brick>i,.ico.ico-brick::before,.ico.ico-brick::after,.ico.ico-idle>i,.ico.ico-idle::before,.ico.ico-idle::after,.ico.ico-army>i,.ico.ico-army::before,.ico.ico-army::after,.ico.ico-heal>i,.ico.ico-heal::before,.ico.ico-heal::after,.ico.ico-guard>i,.ico.ico-guard::before,.ico.ico-guard::after,.ico.ico-banner>i,.ico.ico-banner::before,.ico.ico-banner::after,.ico.ico-shield>i,.ico.ico-shield::before,.ico.ico-shield::after,.ico.ico-star>i,.ico.ico-star::before,.ico.ico-star::after,.ico.ico-orb>i,.ico.ico-orb::before,.ico.ico-orb::after,.ico.ico-shop>i,.ico.ico-shop::before,.ico.ico-shop::after,.ico.ico-drop>i,.ico.ico-drop::before,.ico.ico-drop::after{display:none!important}

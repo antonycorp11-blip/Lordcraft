@@ -6,6 +6,7 @@ import './styles/ui.css';
 import './styles/sprites.css';
 import './styles/hud.css';
 import './styles/front.css';
+import './styles/atlas.css';
 import { FACTIONS, FACTION_IDS } from './data/factions';
 import { MAPS } from './world/mapgen';
 import { PLAYER_COLORS } from './sim/entity';
