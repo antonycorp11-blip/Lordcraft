@@ -377,7 +377,7 @@
   font: 600 11px/16px system-ui, sans-serif;
 }
 .hud .quest:empty { display: none; }
-@media (max-width: 620px), (pointer: coarse) and (max-width: 900px) {
+@media (max-width: 620px), (pointer: coarse) and (max-width: 1000px), (pointer: coarse) and (max-height: 500px) {
   .feudo-mode .hud-top .r-upkeep,
   .feudo-mode .hud-top .r-season { display: none; }
   .hud .quest { top: calc(var(--gap) + 40px); font-size: 10px; padding: 3px 10px; }

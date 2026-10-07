@@ -13,6 +13,7 @@ import { getArmor, getRange, getSpeed, skillLevel } from '../sim/stats';
 import { portraitHTML } from '../render/views';
 import { icon } from './icons';
 import { realmHudInfo } from './realm-ui';
+import { atlasPosition, buildingAtlas } from '../render/atlas';
 import type { Session } from './session';
 import type { Input } from './input';
 import { selected, ownSelected, setSelection, selectByClass, selectIdleWorker, centerOnSelection } from './selection';
@@ -492,6 +493,22 @@ export class Hud {
     const sig = this.btns.map((b) => `${b.id}${b.disabled ? 0 : 1}${b.active ? 1 : 0}${b.auto ? 1 : 0}${b.badge ?? ''}`).join('|') + this.page + s.mode.k;
     if (sig === this.sig) return;
     this.sig = sig;
+    const cards = this.page === 'build' || this.page === 'build2';
+    this.root.classList.toggle('bmenu', cards);
+    this.el.grid.classList.toggle('cards', cards);
+    if (cards) {
+      // menu de construção: cartões com a arte do prédio, nome e custo
+      const res = s.g.players[s.pid].res;
+      this.el.grid.innerHTML = this.btns.map((b) => {
+        if (b.id === 'back') return `<button data-id="back" class="bc back">${icon('back')}<b>Voltar</b></button>`;
+        const type = b.id.slice(2);
+        const a = buildingAtlas(type);
+        const art = a ? `<i class="bimg" style="background-image:url('${a.url}');background-size:${a.cols * 100}% ${a.rows * 100}%;background-position:${atlasPosition(a, 2)}"></i>` : `<i class="bimg alt">${b.icon}</i>`;
+        const cost = RES_KEYS.filter((k) => b.cost?.[k]).map((k) => `<span class="${res[k] < (b.cost![k] ?? 0) ? 'no' : ''}">${icon(k)}${b.cost![k]}</span>`).join('');
+        const why = b.disabled && b.reason && !b.reason.startsWith('Recursos') ? `<small class="why">${b.reason.replace('Requer: ', 'Requer ')}</small>` : '';
+        return `<button data-id="${b.id}" class="bc ${b.disabled ? 'dis' : ''}">${art}<b>${b.label}</b><span class="cost">${cost}</span>${why}</button>`;
+      }).join('');
+    } else
     this.el.grid.innerHTML = this.btns.map((b) => `<button data-id="${b.id}" class="cb ${b.disabled ? 'dis' : ''} ${b.active ? 'act' : ''} ${b.auto ? 'auto' : ''}">${b.icon}<kbd>${b.key}</kbd>${b.badge ? `<em>${b.badge}</em>` : ''}<span class="lbl">${b.label}</span></button>`).join('');
     const own = ownSelected(s);
     this.el.form.hidden = s.isTouch || !(own.filter((e) => e.kind === 'unit' && !e.isWorker).length > 1);

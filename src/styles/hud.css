@@ -976,7 +976,7 @@
 }
 
 /* ---------- Celular ---------- */
-@media (max-width: 620px), (pointer: coarse) and (max-width: 900px) {
+@media (max-width: 620px), (pointer: coarse) and (max-width: 1000px), (pointer: coarse) and (max-height: 500px) {
   .hud {
     --gap: 8px;
     --btn: 46px;
@@ -1228,7 +1228,7 @@
   border-radius: 18px;
 }
 
-@media (max-width: 620px), (pointer: coarse) and (max-width: 900px) {
+@media (max-width: 620px), (pointer: coarse) and (max-width: 1000px), (pointer: coarse) and (max-height: 500px) {
   .info {
     order: -1;
     flex: 0 1 auto;
@@ -1274,3 +1274,59 @@
 .hud .sb.build + .sb { margin-top: 10px; }
 /* no celular, pausar fica no menu */
 .touch .hud .tb[data-a='pause'] { display: none; }
+
+/* celular (inclusive deitado, com tela larga): sem letras de atalho de teclado */
+.touch .hud .cb kbd { display: none; }
+
+/* ---------- Menu de construção: faixa de cartões com arte, nome e custo ---------- */
+.hud.bmenu .mm-wrap,
+.hud.bmenu .info { display: none; }
+.hud.bmenu .cmds { flex: 1; min-width: 0; margin-left: 0; padding: 8px; }
+.cmds .grid.cards {
+  display: flex;
+  gap: 8px;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.cmds .grid.cards::-webkit-scrollbar { display: none; }
+.hud .bc {
+  position: relative;
+  flex: none;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 2px;
+  width: 108px;
+  padding: 6px 6px 8px;
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  background: #121d19;
+  box-shadow: none;
+  color: var(--ink);
+  font: 600 11px/1.2 system-ui, sans-serif;
+  text-align: center;
+}
+.hud .bc:active { transform: scale(0.96); }
+.hud .bc .bimg {
+  display: block;
+  width: 92px;
+  height: 78px;
+  background-repeat: no-repeat;
+}
+.hud .bc .bimg.alt { display: grid; place-items: center; }
+.hud .bc b { font-weight: 700; color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.hud .bc .cost { display: flex; gap: 6px; justify-content: center; color: var(--ink); font-weight: 600; }
+.hud .bc .cost span { display: inline-flex; align-items: center; gap: 1px; }
+.hud .bc .cost .ico { scale: 0.45; margin: -12px -10px; }
+.hud .bc .cost .no { color: #f28b75; }
+.hud .bc .why { color: #f2a08f; font-size: 9px; font-weight: 500; line-height: 1.15; }
+.hud .bc.dis { opacity: 0.55; }
+.hud .bc.back { width: 70px; align-content: center; border-style: dashed; }
+.hud .bc.back .ico { scale: 0.8; }
+@media (max-width: 620px), (pointer: coarse) and (max-height: 500px) {
+  .hud .bc { width: 92px; }
+  .hud .bc .bimg { width: 80px; height: 62px; }
+}

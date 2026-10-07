@@ -204,7 +204,7 @@ let nextFeedback = '';
 function launch({game:g,ais}: Bundle, opts: { home?: Bundle; armyId?: number } = {}) {
   dispose?.();
   app.className='playing';
-  app.innerHTML='<div class="viewport" aria-label="Campo de batalha"></div><div class="hud"></div><pre class="diagnostics" hidden></pre><div class="pause-sign" hidden>PARTIDA PAUSADA</div>';
+  app.innerHTML='<div class="viewport" aria-label="Campo de batalha"></div><div class="hud"></div><pre class="diagnostics" hidden></pre><div class="pause-sign" hidden>PARTIDA PAUSADA<small>toque para continuar</small></div>';
   const vp=app.querySelector<HTMLElement>('.viewport')!, hudRoot=app.querySelector<HTMLElement>('.hud')!;
   if(g.mode==='province'&&!g.fogs[0].revealAll){g.fogs[0].revealAll=true;g.updateFog(0);} // salvamentos antigos do feudo
   const r=new Renderer(g,vp,0);
@@ -239,7 +239,7 @@ function launch({game:g,ais}: Bundle, opts: { home?: Bundle; armyId?: number } =
   };
   const menu=()=>{
     open(`<span class="eyebrow">REINOS DE ALDARIS</span><h2>Partida pausada</h2><div class="menu-actions"><button class="primary" data-a="resume">Retornar à conquista</button><button data-a="save">Salvar partida</button><button data-a="help">Como jogar</button><label>Qualidade visual<select id="game-quality">${options([['alta','Alta'],['media','Média'],['baixa','Baixa']],s.quality)}</select></label><button data-a="diag">${diag.hidden?'Mostrar':'Ocultar'} diagnóstico (F3)</button>${battle?'<button data-a="retreat">Recuar da batalha</button>':''}<button data-a="exit">Salvar e voltar ao início</button><button data-a="quit">Sair sem salvar</button></div>`,a=>{
-      if(a==='resume')close();
+      if(a==='resume'){close();s.paused=false;}
       if(a==='save')save('manual');
       if(a==='diag'){toggleDiag();menu();}
       if(a==='exit' && save('manual'))frontPage();
@@ -308,7 +308,14 @@ function launch({game:g,ais}: Bundle, opts: { home?: Bundle; armyId?: number } =
   for(const u of g.units)if(u.alive&&!u.inside)g.spatial.insert(u);
   const hall=g.buildings.find(b=>b.owner===0&&b.alive);if(hall)setSelection(s,[hall.id]);else setSelection(s,g.units.filter(u=>u.owner===0&&u.alive).map(u=>u.id));
   let raf=0,last=performance.now(),acc=0,lastUI=0,lastMM=0,lastSave=g.time,fps=60,resultShown=false,ended=false;
-  const visibility=()=>{if(document.hidden){s.paused=true;s.dirty=true;acc=0;}last=performance.now();};
+  // o app saiu da tela: pausa; ao voltar, continua sozinho (só se foi essa a causa da pausa)
+  let autoPaused=false;
+  const visibility=()=>{
+    if(document.hidden){if(!s.paused){s.paused=true;autoPaused=true;}s.dirty=true;acc=0;}
+    else if(autoPaused){autoPaused=false;if(!hud.el.modal.classList.contains('open')&&!realmOpen())s.paused=false;}
+    last=performance.now();
+  };
+  pause.onclick=()=>{if(!hud.el.modal.classList.contains('open')&&!realmOpen()){s.paused=false;s.dirty=true;}};
   document.addEventListener('visibilitychange',visibility);
   const frame=(now:number)=>{
     if(ended)return;

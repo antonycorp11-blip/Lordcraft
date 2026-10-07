@@ -78,7 +78,7 @@
 .cost span{display:flex;gap:6px;align-items:center}
 .cost .ico{width:15px;height:15px;scale:.7}
 .diagnostics{position:absolute;z-index:55;top:65px;right:12px;max-width:min(600px,90vw);padding:15px;background:#061810e8;border:1px solid #719663;color:#b9d2a3;font:11px/1.7 monospace;white-space:pre-wrap;pointer-events:none}
-.pause-sign{position:absolute;z-index:19;top:45%;width:100%;text-align:center;color:#f0dfab;letter-spacing:.22em;text-shadow:0 3px 10px #000;font-size:22px;pointer-events:none}
+.pause-sign{position:absolute;z-index:19;top:42%;left:50%;translate:-50% 0;padding:14px 26px;border-radius:16px;background:#0b1214cc;text-align:center;color:#f0dfab;letter-spacing:.22em;text-shadow:0 3px 10px #000;font-size:22px;cursor:pointer}.pause-sign small{display:block;margin-top:4px;font:12px system-ui,sans-serif;letter-spacing:.05em;color:#c9c3ad}
 .ico{position:relative;display:block;flex-shrink:0;width:24px;height:24px;--ic:#c5cda6}
 .ico:before,.ico:after,.ico>i{content:'';display:block;position:absolute}
 .ico:before{inset:3px;border:2px solid var(--ic);transform:rotate(45deg);background:#84987d33}
