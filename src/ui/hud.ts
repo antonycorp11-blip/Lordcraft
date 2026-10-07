@@ -3,7 +3,7 @@ import { ABILITIES, ITEMS } from '../data/abilities';
 import { RES_KEYS, type Cost } from '../data/types';
 import type { Entity } from '../sim/entity';
 import {
-  issueStop, issueHold, issueRetreat, issueReturn, train, research, upgrade, cancelQueue, cancelConstruction,
+  issueStop, issueHold, issueRetreat, issueReturn, issueRepair, train, research, upgrade, cancelQueue, cancelConstruction,
   canTrain, canResearch, canUpgrade, revive, reviveCost, learn, useHeroItem, buyHeroItem, hire, toggleAutocast, issueCast,
   nearestShop, type Formation,
 } from '../sim/commands';
@@ -671,6 +671,20 @@ export class Hud {
       return '';
     };
     if (!lead.built) {
+      const busy = g.units.some((u) => u.alive && u.owner === s.pid && ((u.order?.t === 'build' && u.order.site === lead.id) || (u.order?.t === 'repair' && u.order.target === lead.id)));
+      out.push({
+        id: 'resume', label: busy ? 'Chamar mais um construtor' : 'Retomar obra', key: 'R', icon: icon('build'),
+        desc: 'Manda o trabalhador mais próximo (de preferência ocioso) continuar esta construção.',
+        run: () => {
+          const ws = g.units.filter((u) => u.alive && u.owner === s.pid && u.isWorker && !(u.order?.t === 'build' && u.order.site === lead.id) && !(u.order?.t === 'repair' && u.order.target === lead.id));
+          const idle = ws.filter((u) => !u.order && !u.inside);
+          const pool = idle.length ? idle : ws;
+          const w = pool.sort((a, b) => Math.hypot(a.x - lead.cx, a.y - lead.cy) - Math.hypot(b.x - lead.cx, b.y - lead.cy))[0];
+          if (!w) { this.feedback('Sem trabalhadores disponíveis.'); return; }
+          issueRepair(g, s.pid, [w.id], lead.id);
+          this.feedback('Construtor a caminho.');
+        },
+      });
       out.push({ id: 'cancelc', label: 'Cancelar construção', key: 'ESCAPE', icon: icon('cancel'), desc: 'Devolve 75% do custo.', run: () => cancelConstruction(g, s.pid, lead.id) });
       return out;
     }

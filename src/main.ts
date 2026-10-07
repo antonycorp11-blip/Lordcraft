@@ -75,7 +75,9 @@ function autoQuality(): string {
 let quality = autoQuality();
 const options = (entries: [string, string][], value = '') => entries.map(([k, v]) => `<option value="${k}" ${k === value ? 'selected' : ''}>${v}</option>`).join('');
 
+let updateReady = false;
 function frontPage() {
+  if (updateReady) { location.reload(); return; }
   dispose?.(); dispose = undefined;
   app.className = 'lobby';
   const f = FACTIONS[faction];
@@ -353,6 +355,20 @@ function launch({game:g,ais}: Bundle, opts: { home?: Bundle; armyId?: number } =
 frontPage();
 
 // PWA: só na versão publicada (no desenvolvimento o cache atrapalharia as edições).
+// O iPhone pode "ressuscitar" o app antigo da memória: ao voltar para o app, procura uma
+// versão nova; se houver, recarrega na tela inicial (ou assim que a partida for para o início).
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => { navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {}); });
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return; // primeira instalação: nada a recarregar
+    updateReady = true;
+    if (app.className === 'lobby') location.reload();
+  });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).then((reg) => {
+      const check = () => { reg.update().catch(() => {}); };
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+      setInterval(check, 5 * 60 * 1000);
+    }).catch(() => {});
+  });
 }

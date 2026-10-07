@@ -236,6 +236,7 @@ export class Input {
     if (issueBuild(s.g, s.pid, free.id, p.type, p.tx, p.ty, queue)) {
       s.g.emit('order', p.tx + BUILDINGS[p.type].size / 2, p.ty + BUILDINGS[p.type].size / 2, { owner: s.pid });
       if (!queue) this.endMode();
+      if (!queue && s.isTouch) { setSelection(s, []); this.hooks.feedback('Construtor a caminho da obra.'); }
       return true;
     }
     return false;
@@ -316,6 +317,11 @@ export class Input {
     if (e) {
       const dbl = now - this.lastTap.t < 350 && this.lastTap.id === e.id;
       this.lastTap = { t: now, id: e.id };
+      const workersSel = own.some((u) => u.isWorker);
+      if (e.owner === s.pid && e.kind === 'building' && workersSel && (!e.built || e.hp < e.maxHp) && !own.includes(e)) {
+        this.smart(wx, wy, false); // continua a obra (ou repara)
+        return;
+      }
       if (e.owner === s.pid && (e.kind === 'unit' || e.kind === 'building')) {
         if (dbl) selectSameType(s, e.type);
         else setSelection(s, [e.id]);

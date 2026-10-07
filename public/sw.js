@@ -4,7 +4,7 @@
 // - Arquivos com hash no nome (assets/*.js, *.css, *.webp...) nunca mudam: vêm do cache
 //   depois do primeiro download, o que deixa o jogo rápido e jogável offline.
 // Ao mudar a estratégia, troque VERSION para descartar caches antigos.
-const VERSION = 'aldaris-v1';
+const VERSION = 'aldaris-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -22,7 +22,8 @@ self.addEventListener('fetch', (event) => {
 
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req)
+      // no-store: o iPhone não pode responder a página com uma cópia velha do cache HTTP
+      fetch(req, { cache: 'no-store' })
         .then((res) => {
           const copy = res.clone();
           caches.open(VERSION).then((c) => c.put(req, copy));

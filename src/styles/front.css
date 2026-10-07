@@ -231,3 +231,35 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Celular deitado: pouca altura. Tudo compacto e o botão Jogar sempre à vista. */
+@media (max-height: 500px) {
+  .lobby { padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+  .lobby-brand { margin-bottom: 4px; }
+  .lobby-brand h1 { font-size: 30px; }
+  .lobby-brand p { display: none; }
+  .lobby-crests { margin: 4px 0 8px; gap: 8px; }
+  .lobby-crest i { width: 40px; height: 40px; }
+  .lobby .lobby-crest span { font-size: 9px; }
+  .lobby-hero { grid-template-columns: 0.9fr 1.1fr; gap: 12px; padding: 8px; }
+  .lobby-art { aspect-ratio: auto; height: 42vh; }
+  .lobby-info h2 { font-size: 20px; }
+  .lobby-motto { margin: 2px 0 4px; font-size: 12px; }
+  .lobby-desc { margin-bottom: 6px; font-size: 12px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .lobby-lists { display: none; }
+  .lobby-actions { margin-top: 10px; max-width: 520px; grid-template-columns: 1fr 1.6fr; align-items: center; }
+  .lobby .lobby-play { padding: 12px; font-size: 18px; }
+  .lobby-row button { padding: 9px 4px; }
+  .lobby .setup-error { grid-column: 1 / -1; }
+}
+/* Fundar a casa em tela baixa: brasão ao lado, sem rolar demais */
+@media (max-height: 500px) {
+  .front-modal { padding: 8px; }
+  .dyn.dlg { max-height: 96dvh; padding: 14px 18px; }
+  .dyn > p:not([role]) { display: none; }
+  .dyn h2 { margin: 2px 0 6px; font-size: 20px; }
+  .dyn .dyn-grid { grid-template-columns: 110px 1fr; margin: 6px 0; gap: 12px; }
+  .dyn .crest.huge { width: 84px; height: 100px; font-size: 44px; }
+  .dyn .dyn-fields { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .dyn .menu-actions { margin-top: 8px; }
+}
