@@ -7,7 +7,7 @@ import { TerrainView } from './terrain';
 import { buildingClass, buildingHTML, resourceHTML, unitClass, unitHTML, unitScale } from './views';
 import { applySheetStyle, spriteFrame, spriteSheetFor, spriteState, type SpriteDir, type WorkKind } from './sprite-anim';
 import { Weather } from './weather';
-import { applyAtlasStyle, atlasPosition, buildingAtlas, buildingFrame, resourceAtlas, resourceFrame } from './atlas';
+import { applyAtlasStyle, atlasPosition, buildingAtlas, buildingFrame, buildingFxFrame, fxAtlas, resourceAtlas, resourceFrame } from './atlas';
 
 // Renderizador DOM/CSS. Lê o estado da simulação; nunca o modifica.
 
@@ -33,6 +33,9 @@ interface View {
   sprMode?: string;
   atl?: HTMLElement;      // quadro da folha de construção/recurso
   atlPos?: string;
+  fx?: HTMLElement;       // efeito sobre a construção (desabamento, fogo, poeira de obra)
+  fxPos?: string;
+  deadAt?: number;
   sprDir?: SpriteDir;     // última direção de movimento (para ficar parado na mesma pose)
   lx?: number; ly?: number; // última posição desenhada (px)
   stride?: number;          // distância andada: avança o ciclo de caminhada
@@ -388,7 +391,15 @@ export class Renderer {
         v.atl.className = 'atl';
         v.el.prepend(v.atl);
         applyAtlasStyle(v.atl, ba, b.size, TILE);
+        const fa = fxAtlas();
+        if (fa) {
+          v.fx = document.createElement('i');
+          v.fx.className = 'atl bfx';
+          v.atl.after(v.fx);
+          applyAtlasStyle(v.fx, fa, b.size, TILE);
+        }
       }
+      v.deadAt = undefined; v.fxPos = '';
       if (!v.light) {
         v.light = document.createElement('i');
         v.light.className = `lt a-${BUILDINGS[b.type].arch} s${b.size}`;
@@ -422,6 +433,16 @@ export class Renderer {
       cls += ' atl-on';
       const pos = atlasPosition(ba, buildingFrame({ alive: b.alive, built: b.built, progress: b.progress, hpRatio: hr, night: this.lastDark > 0.45, id: b.id }, this.now));
       if (pos !== v.atlPos) { v.atl!.style.backgroundPosition = pos; v.atlPos = pos; }
+      if (v.fx) {
+        if (!b.alive && v.deadAt === undefined) v.deadAt = this.now;
+        if (b.alive) v.deadAt = undefined;
+        const ff = buildingFxFrame(b.alive, b.built, b.progress, v.deadAt === undefined ? 0 : (this.now - v.deadAt) / 1000, this.now, b.id);
+        if (ff >= 0) {
+          cls += ' fx-on';
+          const fp = atlasPosition(fxAtlas()!, ff);
+          if (fp !== v.fxPos) { v.fx.style.backgroundPosition = fp; v.fxPos = fp; }
+        }
+      }
     }
     if (cls !== v.cls) { v.el.className = cls; v.cls = cls; }
     const hp = Math.round(hr * 50) / 50;

@@ -149,3 +149,35 @@
 .u.hov:not(.sel) .ring {
   opacity: 0.55;
 }
+
+/* efeitos sobre construções: some a folha da construção enquanto o efeito toca */
+.bd .bfx{background-image:url('../assets/sprites/fx_fire.webp')}
+.bd.atl-on.fx-on .bfx{display:block}
+.bd.atl-on:not(.fx-on) .bfx{display:none}
+.bd.atl-on.fx-on .atl:not(.bfx){display:none}
+
+/* decoração do mapa (d_props: 0 pedra, 1 pedrinhas, 2 arbusto, 3 flores, 4 capim, 5 tronco,
+   6 carroça, 7 pilar, 8 arco, 9 ossos, 10 placa, 11 fogueira, 12 feno, 13 barris, 14 caixas, 15 poço) */
+.prop{position:absolute;width:40px;height:40px;pointer-events:none;background:url('../assets/sprites/d_props.webp') no-repeat;background-size:400% 400%}
+.prop.p0{background-position:0.000% 0.000%}
+.prop.p1{background-position:33.333% 0.000%}
+.prop.p2{background-position:66.667% 0.000%}
+.prop.p3{background-position:100.000% 0.000%}
+.prop.p4{background-position:0.000% 33.333%}
+.prop.p5{background-position:33.333% 33.333%}
+.prop.p6{background-position:66.667% 33.333%}
+.prop.p7{background-position:100.000% 33.333%}
+.prop.p8{background-position:0.000% 66.667%}
+.prop.p9{background-position:33.333% 66.667%}
+.prop.p10{background-position:66.667% 66.667%}
+.prop.p11{background-position:100.000% 66.667%}
+.prop.p12{background-position:0.000% 100.000%}
+.prop.p13{background-position:33.333% 100.000%}
+.prop.p14{background-position:66.667% 100.000%}
+.prop.p15{background-position:100.000% 100.000%}
+.dc.dc-pillar{width:48px;height:48px;clip-path:none;border:0;background:url('../assets/sprites/d_props.webp') 100.000% 33.333% / 400% 400% no-repeat}
+.dc.dc-statue{width:48px;height:48px;clip-path:none;border:0;background:url('../assets/sprites/d_props.webp') 100.000% 33.333% / 400% 400% no-repeat}
+.dc.dc-arch{width:48px;height:48px;clip-path:none;border:0;background:url('../assets/sprites/d_props.webp') 0.000% 66.667% / 400% 400% no-repeat}
+.dc.dc-stones{width:48px;height:48px;clip-path:none;border:0;background:url('../assets/sprites/d_props.webp') 33.333% 0.000% / 400% 400% no-repeat}
+.dc.dc-bones{width:48px;height:48px;clip-path:none;border:0;background:url('../assets/sprites/d_props.webp') 33.333% 66.667% / 400% 400% no-repeat}
+.far .prop{display:none}

@@ -54,3 +54,19 @@ export function atlasPosition(a: AtlasInfo, frame: number): string {
   const y = a.rows > 1 ? (row / (a.rows - 1)) * 100 : 0;
   return `${x}% ${y}%`;
 }
+
+/** Efeitos sobre a construção (folha fx_fire): desabamento, ruína em chamas e poeira de obra.
+ *  Devolve o quadro da folha de efeitos ou -1 quando a própria folha da construção basta. */
+export function buildingFxFrame(alive: boolean, built: boolean, progress: number, deadFor: number, now: number, id: number): number {
+  if (!alive) {
+    if (deadFor < 0.7) return 8 + Math.min(3, Math.floor(deadFor / 0.7 * 4)); // desabamento
+    if (deadFor < 9) return Math.floor(now / 1000 * 8 + id) % 8;             // escombros em chamas
+    return -1;                                                                // ruína parada
+  }
+  if (!built && progress < 0.33) return 12 + (Math.floor(now / 1000 * 6 + id * 0.3) % 4); // canteiro com poeira
+  return -1;
+}
+
+export function fxAtlas(): AtlasInfo | undefined {
+  return ATLAS.fx_fire;
+}

@@ -187,7 +187,12 @@ export class TerrainView {
         else if (t === Ter.Water && h < 0.16) g.push(`<i class="rp" style="left:${lx + (h * 60) % 16}px;top:${ly + 8}px;animation-delay:-${(h * 37) % 6}s"></i>`);
         else if (t === Ter.Road && h < 0.25) g.push(`<i class="pebble" style="left:${lx + (h * 90) % 20}px;top:${ly + (h * 55) % 20}px"></i>`);
         else if (w.block[i] === 0 && !w.tree[i]) {
-          if (h < 0.09 && (t === Ter.Grass || t === Ter.Moss)) g.push(`<i class="tuft ${t === Ter.Moss ? 'm' : ''} ${h < 0.03 ? 'fl' : ''}" style="left:${lx + (h * 300) % 22}px;top:${ly + (h * 170) % 22}px"></i>`);
+          // decoração (arte gerada): arbustos, flores, capim, pedras, troncos, fardos de feno
+          if (h < 0.014 && (t === Ter.Grass || t === Ter.Moss || t === Ter.Dirt)) {
+            const props = t === Ter.Dirt ? [0, 1, 5, 12] : [2, 3, 4, 2, 3, 0, 1, 5];
+            const k = props[Math.floor(hash2(x * 7, y * 11, S + 3) * props.length)];
+            o.push(`<i class="prop p${k}" style="left:${lx + (h * 500) % 10 - 4}px;top:${ly - 12}px;z-index:${z}"></i>`);
+          } else if (h < 0.09 && (t === Ter.Grass || t === Ter.Moss)) g.push(`<i class="tuft ${t === Ter.Moss ? 'm' : ''} ${h < 0.03 ? 'fl' : ''}" style="left:${lx + (h * 300) % 22}px;top:${ly + (h * 170) % 22}px"></i>`);
           else if (h < 0.05 && t === Ter.Snow) g.push(`<i class="tuft s" style="left:${lx + 8}px;top:${ly + 10}px"></i>`);
           else if (h < 0.06 && t === Ter.Ash) g.push(`<i class="ember" style="left:${lx + 10}px;top:${ly + 12}px;animation-delay:-${(h * 50) % 4}s"></i>`);
           else if (h > 0.985) g.push(`<i class="pebble big" style="left:${lx + 6}px;top:${ly + 10}px"></i>`);

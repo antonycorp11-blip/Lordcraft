@@ -226,7 +226,9 @@
         4
       ],
       "cell": 160,
-      "quality": 82
+      "quality": 82,
+      "out_cols": 16,
+      "fit": 0.9
     },
     "ui_btn": {
       "src": "05.png",
@@ -260,6 +262,16 @@
       "baseline": 0.94,
       "fit": 0.94,
       "quality": 90
+    },
+    "d_props": {
+      "src": "19.png",
+      "grid": [
+        4,
+        4
+      ],
+      "cell": 128,
+      "quality": 85,
+      "fit": 0.9
     }
   }
 }
