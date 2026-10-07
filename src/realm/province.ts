@@ -12,11 +12,12 @@ export const WAGE = { worker: 0.25, soldier: 0.2, hero: 2 }; // prata por dia (s
 export const HOUSING = { hall: 20, house: 8, other: 1 };
 const EAT = { civ: 0.04, worker: 0.05, soldier: 0.06 };
 const FARM = 0.07;
+const GARDEN = 0.32; // grãos por dia de cada casa (a sede vale duas)
 const SEASON_FOOD = [1, 1.4, 1.2, 0.3];
 
 export interface ProvinceStats {
   workers: number; soldiers: number; soldierSupply: number; heroes: number; towers: number; camps: number;
-  housing: number; foodDay: number; wagesDay: number; taxDay: number; secTarget: number; contentTarget: number;
+  housing: number; gardens: number; foodDay: number; wagesDay: number; taxDay: number; secTarget: number; contentTarget: number;
 }
 
 export function emptyBudget(): Budget { return { taxes: 0, sales: 0, tributeIn: 0, salaries: 0, tributeOut: 0, interest: 0, purchases: 0 }; }
@@ -25,7 +26,7 @@ export function home(r: Realm): Province { return r.provinces[player(r).province
 
 export function provinceStats(g: Game, r: Realm): ProvinceStats {
   const pid = 0;
-  let workers = 0, soldiers = 0, soldierSupply = 0, heroes = 0, towers = 0, housing = 0;
+  let workers = 0, soldiers = 0, soldierSupply = 0, heroes = 0, towers = 0, housing = 0, gardens = 0;
   for (const u of g.units) {
     if (!u.alive || u.owner !== pid) continue;
     const c = u.udef!.cls;
@@ -36,8 +37,8 @@ export function provinceStats(g: Game, r: Realm): ProvinceStats {
   for (const b of g.buildings) {
     if (!b.alive || b.owner !== pid || !b.built) continue;
     const cat = b.bdef!.cat;
-    if (cat === 'hall') housing += HOUSING.hall;
-    else if (cat === 'house') housing += HOUSING.house;
+    if (cat === 'hall') { housing += HOUSING.hall; gardens += 2; }
+    else if (cat === 'house') { housing += HOUSING.house; gardens += 1; }
     else housing += HOUSING.other;
     if (b.bdef!.attack) towers++;
   }
@@ -46,14 +47,15 @@ export function provinceStats(g: Game, r: Realm): ProvinceStats {
   const camps = g.camps.filter((c) => !c.cleared && Math.hypot(c.x - sx, c.y - sy) < 50).length;
   const p = home(r);
   const s = seasonOf(r);
-  const foodDay = p.pop * FARM * p.prod.food * SEASON_FOOD[s] - p.pop * EAT.civ - workers * EAT.worker - (soldiers + heroes) * EAT.soldier;
+  // hortas das casas e da sede garantem um mínimo de grãos mesmo com poucos civis
+  const foodDay = (p.pop * FARM + gardens * GARDEN) * p.prod.food * SEASON_FOOD[s] - p.pop * EAT.civ - workers * EAT.worker - (soldiers + heroes) * EAT.soldier;
   const wagesDay = workers * WAGE.worker + soldierSupply * WAGE.soldier + heroes * WAGE.hero;
   const taxDay = p.pop * TAX_RATE[r.laws.tax] * (0.6 + p.security / 250) * (r.council.tesoureiro ? 1.12 : 1) * (0.7 + p.content / 200);
   const guard = (soldierSupply * 2 + towers * 10 + heroes * 6) / Math.max(10, p.pop) * 30;
   const secTarget = clamp(45 + Math.min(40, guard) - Math.min(20, camps * 4) + (r.council.marechal ? 10 : 0) - (r.raid ? 25 : 0), 0, 100);
   const crowd = p.pop > housing ? Math.min(25, (p.pop - housing) * 2) : 0;
   const contentTarget = clamp(58 + TAX_CONTENT[r.laws.tax] + (p.food <= 0 ? -35 : 0) + (p.security - 50) * 0.25 - crowd + (player(r).title === 'rei' ? 10 : 0), 0, 100);
-  return { workers, soldiers, soldierSupply, heroes, towers, camps, housing, foodDay, wagesDay, taxDay, secTarget, contentTarget };
+  return { workers, soldiers, soldierSupply, heroes, towers, camps, housing, gardens, foodDay, wagesDay, taxDay, secTarget, contentTarget };
 }
 
 /** Um dia na província do jogador. */
@@ -63,7 +65,10 @@ export function dayPlayerProvince(g: Game, r: Realm) {
   const pl = g.players[0];
   p.housing = st.housing;
   // comida
+  const before = p.food;
   p.food = Math.max(0, p.food + st.foodDay);
+  if (st.foodDay < 0 && before >= 40 && p.food < 40) g.msg(0, 'Os grãos estão acabando! Construa casas (hortas), tenha mais civis ou compre grãos no mercado do Feudo.', '#ff9a6a');
+  if (before > 0 && p.food <= 0) g.msg(0, 'Fome no Vale: o povo começa a fugir.', '#ff6a6a');
   // população: cresce com comida e moradia; foge com fome ou superlotação
   const free = st.housing - p.pop;
   if (p.food > 0 && free > 0) {

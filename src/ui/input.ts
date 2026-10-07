@@ -179,12 +179,18 @@ export class Input {
     if (!d || d.id !== e.pointerId) return;
     if (d.pan) return;
     const [wx, wy] = s.r.cam.toWorld(x, y);
-    if (d.box && d.moved) {
+    const touch = e.pointerType === 'touch';
+    if (d.box && d.moved && (!touch || Math.hypot(x - d.x, y - d.y) > 24)) {
       const [ax, ay] = s.r.cam.toWorld(d.x, d.y);
       boxSelect(s, ax, ay, wx, wy, e.shiftKey);
+      // celular: selecionou? o modo de área desliga sozinho e o próximo toque já manda as tropas
+      if (touch && s.touchSelectMode && s.selection.length) {
+        s.touchSelectMode = false;
+        this.hooks.feedback('Selecionadas. Toque no mapa para mandá-las.');
+      }
       return;
     }
-    if (d.moved) return;
+    if (d.moved && !(touch && d.box)) return; // arrasto curto no modo de área conta como toque
     if (e.pointerType === 'touch') this.tap(wx, wy);
     else this.leftClick(wx, wy, e.shiftKey, e.ctrlKey || e.metaKey);
   }

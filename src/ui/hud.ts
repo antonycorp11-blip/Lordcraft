@@ -34,6 +34,8 @@ interface Btn {
   alt?: () => void;
 }
 
+/** Botão para soltar a seleção (no celular tocar no chão manda as tropas, não desseleciona). */
+const DESEL = '<button class="desel" title="Soltar seleção" aria-label="Soltar seleção">✕</button>';
 const fmt = (n: number) => Math.floor(n).toLocaleString('pt-BR');
 const CLASS_NAMES: Record<string, string> = {
   worker: 'Trabalhador', melee: 'Infantaria', ranged: 'À distância', cavalry: 'Cavalaria', caster: 'Suporte mágico',
@@ -219,6 +221,7 @@ export class Hud {
       const qi = t.closest<HTMLElement>('[data-q]');
       const it = t.closest<HTMLElement>('[data-item]');
       const cf = t.closest<HTMLElement>('[data-cls]');
+      if (t.closest('.desel')) { setSelection(s, []); this.page = 'main'; s.dirty = true; return; }
       if (qi) { cancelQueue(s.g, s.pid, Number(qi.dataset.b), Number(qi.dataset.q)); this.infoSig = ''; return; }
       if (it) { useHeroItem(s.g, s.pid, Number(it.dataset.h), Number(it.dataset.item)); this.infoSig = ''; return; }
       if (cf) { this.filterClass(cf.dataset.cls!); return; }
@@ -326,6 +329,8 @@ export class Hud {
     this.el.sun.style.transform = `rotate(${ph * 360}deg)`;
     this.el.clock.classList.toggle('isnight', g.isNight());
     this.root.classList.toggle('paused', s.paused);
+    const selBtn = this.el.touchbar.querySelector('[data-t=select]');
+    if (selBtn && selBtn.classList.contains('on') !== s.touchSelectMode) selBtn.classList.toggle('on', s.touchSelectMode);
     // alertas
     for (const a of g.alerts) {
       if (this.alertSeen.has(a)) continue;
@@ -406,7 +411,7 @@ export class Hud {
     if (sel.length === 1) {
       const e = sel[0];
       const html = this.singleInfo(e, color);
-      if (html !== this.infoSig) { this.infoSig = html; this.el.info.innerHTML = html; }
+      if (html !== this.infoSig) { this.infoSig = html; this.el.info.innerHTML = html + DESEL; }
       return;
     }
     // múltipla seleção: uma fileira de retratos com a contagem por tipo (toque = só esse tipo)
@@ -419,7 +424,7 @@ export class Hud {
       tiles += `<button class="ut ${s.subgroup === type ? 'act' : ''}" data-type="${type}" title="${name} — toque: selecionar só este tipo">${portraitHTML(type, own ? color : g.players[es[0].owner]?.color ?? '#999')}<em>${es.length}</em></button>`;
     }
     const html = `<div class="multi"><div class="tiles">${tiles}</div></div>`;
-    if (html !== this.infoSig) { this.infoSig = html; this.el.info.innerHTML = html; }
+    if (html !== this.infoSig) { this.infoSig = html; this.el.info.innerHTML = html + DESEL; }
   }
 
   private singleInfo(e: Entity, color: string): string {

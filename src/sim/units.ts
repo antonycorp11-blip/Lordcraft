@@ -43,6 +43,8 @@ export function updateUnit(g: Game, e: Entity, dt: number) {
   if ((g.tick + e.id) % 10 === 0) tryAutocast(g, e);
 
   if (!e.order && e.queue.length) nextOrder(e);
+  // a pose de trabalho só vale enquanto a ordem a renova a cada passo (obra pronta = para de martelar)
+  if (e.anim === 'work') e.anim = 'idle';
   const o = e.order;
   let desired = false;
   if (!o) desired = idleBehavior(g, e);

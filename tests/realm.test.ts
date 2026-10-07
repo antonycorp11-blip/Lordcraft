@@ -187,3 +187,20 @@ describe('mercado sem lucro instantâneo', () => {
     }
   });
 });
+
+describe('hierarquia sem ciclos', () => {
+  it('conquistar o suserano do suserano não cria ciclo', async () => {
+    const { subjugate } = await import('../src/realm/war');
+    const { game: g } = createCampaign(opts);
+    const r = g.realm!;
+    // jogador (vassalo de Morvane, vassala de Valcrest) toma Valcrest sendo só Lorde
+    r.houses[r.player].title = 'lorde';
+    subjugate(r, r.houses.valcrest, r.houses[r.player]);
+    for (const h of Object.values(r.houses)) {
+      let x = h.liege, n = 0;
+      while (x && n < 12) { expect(x, `ciclo em ${h.id}`).not.toBe(h.id); x = r.houses[x]?.liege ?? null; n++; }
+      expect(n).toBeLessThan(12);
+    }
+    expect(r.houses.valcrest.liege).toBe(r.player);
+  });
+});

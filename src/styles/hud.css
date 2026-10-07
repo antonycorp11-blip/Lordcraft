@@ -1330,3 +1330,21 @@
   .hud .bc { width: 92px; }
   .hud .bc .bimg { width: 80px; height: 62px; }
 }
+
+/* ✕ do cartão de seleção */
+.hud .info { position: relative; }
+.hud .info .desel {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.35);
+  box-shadow: none;
+  color: var(--dim);
+  font: 600 13px/1 system-ui, sans-serif;
+}
+.hud .info:has(.desel) .det h3 { padding-right: 28px; }

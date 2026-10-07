@@ -73,3 +73,36 @@ it('obra abandonada: tocar nela com um trabalhador retoma; botão Retomar obra c
   expect(site.progress).toBeGreaterThan(p0);
   expect(site.built).toBe(true);
 });
+
+it('celular: seleção por área desliga sozinha e o próximo toque manda as tropas; obra pronta = sem pose de trabalho', async () => {
+  const { Input } = await import('../src/ui/input');
+  const { issueBuild } = await import('../src/sim/commands');
+  const { game: g } = createCampaign({ lordName: 'A', houseName: 'B', crest: { c1: '#123', c2: '#eee', pattern: 'fess', charge: '✦' }, female: false, seed: 3, faction: 'valmir' });
+  const vp = document.createElement('div'); document.body.appendChild(vp);
+  const r = new Renderer(g, vp, 0);
+  r.cam.resize(900, 400); r.cam.zoom = 1;
+  const sx = g.players[0].startX, sy = g.players[0].startY;
+  const ids = [0, 1, 2].map((k) => g.spawnUnit('v_lanceiro', 0, sx + 8 + k, sy + 8).id);
+  g.update();
+  r.cam.centerOn(sx + 9, sy + 8);
+  const s = { g, r, pid: 0, selection: [], groups: Array.from({ length: 10 }, () => []), mode: { k: 'none' }, formation: 'block', speed: 1, paused: false, isTouch: true, touchSelectMode: true, quickOrders: true, subgroup: '', lastAlert: null, dirty: true } as any;
+  const said: string[] = [];
+  const input = new Input(s, vp, { blocked: () => false, hotkey: () => false, toggleDiag() {}, toggleMenu() {}, feedback: (t: string) => said.push(t) } as any);
+  const toScreen = (wx: number, wy: number) => [(wx * 32 - r.cam.x) * r.cam.zoom, (wy * 32 - r.cam.y) * r.cam.zoom];
+  const ev = (x: number, y: number) => ({ pointerType: 'touch', pointerId: 1, clientX: x, clientY: y, button: 0, shiftKey: false, ctrlKey: false, metaKey: false, target: vp, preventDefault() {} });
+  vp.getBoundingClientRect = () => ({ left: 0, top: 0, width: 900, height: 400, right: 900, bottom: 400, x: 0, y: 0, toJSON() {} }) as DOMRect;
+  const [ax, ay] = toScreen(sx + 7, sy + 7), [bx, by] = toScreen(sx + 12, sy + 9.5);
+  (input as any).down(ev(ax, ay)); (input as any).move(ev(bx, by)); (input as any).up(ev(bx, by));
+  expect(new Set(s.selection)).toEqual(new Set(ids));
+  expect(s.touchSelectMode).toBe(false);
+  const [tx, ty] = toScreen(sx + 9, sy + 16);
+  (input as any).down(ev(tx, ty)); (input as any).up(ev(tx, ty));
+  for (const id of ids) expect(g.ents.get(id)!.order?.t).toMatch(/move|amove/);
+  // obra pronta: o construtor para de martelar
+  const w = g.units.find((u) => u.owner === 0 && u.isWorker)!;
+  issueBuild(g, 0, w.id, 'v_casa', sx + 6, sy - 9);
+  for (let i = 0; i < 3000 && !g.buildings.some((b) => b.type === 'v_casa' && b.built); i++) g.update();
+  for (let i = 0; i < 5; i++) g.update();
+  expect(g.buildings.some((b) => b.type === 'v_casa' && b.built)).toBe(true);
+  expect(w.anim).not.toBe('work');
+});

@@ -1,7 +1,7 @@
 import { UNITS } from '../data/factions';
 import type { Game } from '../sim/game';
 import { issueMove } from '../sim/commands';
-import { clamp, houseName, log, nid, player, realmOf, remember, roll, route, rumor, setRel, vassalsOf } from './core';
+import { clamp, houseName, isAbove, log, nid, player, realmOf, remember, roll, route, rumor, setRel, vassalsOf } from './core';
 import type { Army, ArmyUnit, House, Realm } from './types';
 
 // Exércitos que marcham pelas estradas, batalhas (comandadas no mapa ou resolvidas),
@@ -229,8 +229,11 @@ export function applyBattle(r: Realm, a: Army, survivors: ArmyUnit[], won: boole
 // Conquista e vassalagem
 // ----------------------------------------------------------------------
 export function subjugate(r: Realm, loser: House, winner: House, how: 'guerra' | 'divida' | 'voluntaria' = 'guerra') {
-  const wasLiegeOfWinner = winner.liege === loser.id;
-  if (wasLiegeOfWinner) winner.liege = loser.liege;     // o vassalo derrubou o próprio suserano
+  // o vencedor estava abaixo do perdedor (direto ou indireto): sobe para o lugar dele na hierarquia
+  if (isAbove(r, loser.id, winner.id)) {
+    for (const h of Object.values(r.houses)) if (h.id !== winner.id && h.liege === loser.id && isAbove(r, h.id, winner.id)) h.liege = winner.id;
+    winner.liege = loser.liege;
+  }
   loser.liege = winner.id;
   setRel(r, loser.id, winner.id, null);
   // quem estava em guerra com o vencedor por causa do perdedor sossega

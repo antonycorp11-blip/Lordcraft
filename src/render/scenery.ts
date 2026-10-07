@@ -105,7 +105,7 @@ export function paintScenery(ctx: CanvasRenderingContext2D, w: World, seed: numb
           const [sx, sy, sw, sh] = cell(world, 4, 3, 3, 1);
           c.save();
           if (north) c.globalAlpha = 0.7;
-          c.shadowColor = 'rgba(15,40,32,0.6)'; c.shadowBlur = 4; c.shadowOffsetX = 5; c.shadowOffsetY = 8;
+          shadow(c, lx + 26, ly + 44, 20, 6);
           c.drawImage(world, sx, sy, sw, sh, lx, ly, 42, 45);
           c.restore();
         } });
@@ -118,10 +118,10 @@ export function paintScenery(ctx: CanvasRenderingContext2D, w: World, seed: numb
         items.push({ z: (y + 1) * TILE, draw: (c) => {
           const [sx, sy, sw, sh] = cell(world, 4, 3, 2, 1);
           c.save();
+          shadow(c, lx + 30, ly + 42, 24 * sc, 7 * sc);
           c.translate(lx - 4 + 27.5, ly - 10 + 27.5);
           c.rotate((rot * Math.PI) / 180);
           c.scale(sc, sc);
-          c.shadowColor = 'rgba(20,42,40,0.5)'; c.shadowBlur = 3; c.shadowOffsetX = 7; c.shadowOffsetY = 9;
           c.drawImage(world, sx, sy, sw, sh, -27.5, -27.5, 55, 55);
           c.restore();
         } });
@@ -151,6 +151,14 @@ export function paintScenery(ctx: CanvasRenderingContext2D, w: World, seed: numb
   }
   items.sort((a, b) => a.z - b.z);
   for (const it of items) it.draw(ctx);
+}
+
+/** Sombra barata (elipse translúcida): a sombra borrada do canvas é lenta no celular. */
+function shadow(c: CanvasRenderingContext2D, x: number, y: number, rx: number, ry: number) {
+  c.fillStyle = 'rgba(14,34,28,0.32)';
+  c.beginPath();
+  c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+  c.fill();
 }
 
 function pebble(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
