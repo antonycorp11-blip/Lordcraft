@@ -677,6 +677,14 @@ export const UNITS: Record<string, UnitDef> = {};
 export const BUILDINGS: Record<string, BuildingDef> = {};
 for (const u of [...valmirUnits, ...kraggUnits, ...veymarUnits, ...durnUnits, ...salinosUnits, ...neutralUnits]) UNITS[u.id] = u;
 for (const b of [...valmirBuildings, ...kraggBuildings, ...veymarBuildings, ...durnBuildings, ...salinosBuildings, ...neutralBuildings]) BUILDINGS[b.id] = b;
+// Construções pesam mais na madeira (abundante) que na prata (finita, das minas):
+// metade da prata, e um quarto do que saiu vira madeira.
+const r5 = (v: number) => Math.round(v / 5) * 5;
+for (const b of Object.values(BUILDINGS)) {
+  const s = b.cost.silver ?? 0;
+  if (s <= 20) continue;
+  b.cost = { ...b.cost, silver: r5(s * 0.5), wood: r5((b.cost.wood ?? 0) + s * 0.25) };
+}
 
 // ordem de exibição: Humanos, Naveos, Vitraneos, Necros, Salinos
 export const FACTION_IDS: FactionId[] = ['valmir', 'veymar', 'durn', 'kragg', 'salinos'];

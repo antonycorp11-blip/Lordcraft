@@ -80,6 +80,8 @@ export class Game {
   /** modo feudo: o mapa é a província do jogador e o reino corre por trás */
   realm: Realm | null = null;
   mode: 'skirmish' | 'province' | 'battle' = 'skirmish';
+  /** árvores derrubadas esperando para crescer de novo (modo feudo) */
+  regrow: { i: number; at: number; kind: number }[] = [];
   /** batalha comandada: exército do jogador (0) contra a casa defensora (1) */
   battle: { army: number; province: string; house: string } | null = null;
   perf = { simMs: 0, aiMs: 0, fogMs: 0 };
@@ -532,7 +534,7 @@ export class Game {
     processPending(this);
     if (this.tick % 10 === 0) updateAuras(this);
     if (this.tick % 10 === 5) this.recomputeSupply();
-    if (this.tick % 20 === 0) { this.economyTick(); if (this.realm) realmSecond(this); }
+    if (this.tick % 20 === 0) { this.economyTick(); if (this.realm) realmSecond(this); if (this.mode === 'province') this.regrowTrees(); }
 
     // pickups (baús)
     if (this.tick % 4 === 0) this.updatePickups();
@@ -557,6 +559,28 @@ export class Game {
     // limpeza
     if (this.tick % 10 === 0) this.compact();
     this.perf.simMs = this.perf.simMs * 0.9 + (performance.now() - t0) * 0.1;
+  }
+
+  /** No feudo as florestas se renovam: o toco vira árvore de novo depois de alguns minutos. */
+  private regrowTrees() {
+    const w = this.world;
+    while (w.felled.length) {
+      const i = w.felled.pop()!;
+      this.regrow.push({ i, at: this.time + 300 + this.rng.next() * 240, kind: w.treeKind[i] });
+    }
+    if (!this.regrow.length || this.regrow[0].at > this.time) { if (this.regrow.length < 2) return; }
+    const keep: typeof this.regrow = [];
+    for (const t of this.regrow) {
+      if (t.at > this.time) { keep.push(t); continue; }
+      const x = t.i % w.w, y = Math.floor(t.i / w.w);
+      // não cresce embaixo de prédio ou de gente: tenta de novo depois
+      const busy = w.buildingAt[t.i] > 0 || w.block[t.i] !== 0 || this.units.some((u) => u.alive && !u.air && Math.abs(u.x - x - 0.5) < 1 && Math.abs(u.y - y - 0.5) < 1);
+      if (busy) { t.at = this.time + 60; keep.push(t); continue; }
+      w.setTree(t.i, 50, t.kind);
+      w.treeVersion++;
+      w.grownTrees.push(t.i);
+    }
+    this.regrow = keep;
   }
 
   private economyTick() {

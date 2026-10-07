@@ -204,3 +204,52 @@ describe('hierarquia sem ciclos', () => {
     expect(r.houses.valcrest.liege).toBe(r.player);
   });
 });
+
+describe('economia que não morre', () => {
+  it('mina esgotada vira veio esgotado e, escavada, rende para sempre', async () => {
+    const { depleteResource } = await import('../src/sim/units');
+    const { issueGather } = await import('../src/sim/commands');
+    const { game: g } = createCampaign(opts);
+    const m = g.resources.find((r) => r.kind === 'mine')!;
+    depleteResource(g, m);
+    expect(m.alive).toBe(true);
+    expect(m.exhausted).toBe(true);
+    m.deep = true; m.exhausted = false; m.amount = 1e9;
+    const ws = g.units.filter((u) => u.owner === 0 && u.isWorker).map((u) => u.id);
+    issueGather(g, 0, ws, m);
+    const s0 = g.players[0].stats.gathered.silver;
+    run(g, 90);
+    expect(g.players[0].stats.gathered.silver).toBeGreaterThan(s0 + 100);
+    expect(m.amount).toBeGreaterThan(1e8);
+  });
+
+  it('árvore derrubada volta a crescer depois de alguns minutos', () => {
+    const { game: g } = createCampaign(opts);
+    const w = g.world;
+    let i = -1;
+    for (let k = 0; k < w.tree.length; k++) if (w.tree[k] && !g.units.some((u) => Math.abs(u.x - (k % w.w)) < 3 && Math.abs(u.y - Math.floor(k / w.w)) < 3)) { i = k; break; }
+    w.removeTree(i);
+    expect(w.tree[i]).toBe(0);
+    run(g, 600);
+    expect(w.tree[i]).toBeGreaterThan(0);
+  });
+
+  it('sem prata o soldo não vira dívida: soldados desertam e voltam a ser civis; dispensar devolve à população', async () => {
+    const { dismiss } = await import('../src/realm/province');
+    const { game: g } = createCampaign(opts);
+    const r = g.realm!;
+    const sx = g.players[0].startX, sy = g.players[0].startY;
+    const ids = Array.from({ length: 10 }, (_, k) => g.spawnUnit('v_lanceiro', 0, sx + 8 + (k % 5), sy + 8 + Math.floor(k / 5)).id);
+    for (const u of g.units) if (u.owner === 0 && u.isWorker) u.order = null; // ninguém minerando
+    g.players[0].res.silver = 0;
+    const pop0 = r.provinces.ermo.pop;
+    run(g, 5 * 8);
+    const left = ids.filter((id) => g.ents.get(id)?.alive).length;
+    expect(left).toBeLessThan(10);
+    expect(g.players[0].debt).toBe(0);
+    expect(r.provinces.ermo.pop).toBeGreaterThan(pop0);
+    const n = dismiss(g, r, ids.filter((id) => g.ents.get(id)?.alive));
+    expect(n).toBe(left);
+    expect(g.units.filter((u) => u.alive && u.type === 'v_lanceiro').length).toBe(0);
+  });
+});

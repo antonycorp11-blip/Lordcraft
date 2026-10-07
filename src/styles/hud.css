@@ -29,7 +29,8 @@
   --btn: 50px;
   --mm: 172px;
   position: absolute;
-  inset: 0;
+  /* iPhone: nada atrás do notch, da ilha ou da barra de gestos (em pé ou deitado) */
+  inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   z-index: 20;
   pointer-events: none;
   color: var(--ink);
@@ -1348,3 +1349,5 @@
   font: 600 13px/1 system-ui, sans-serif;
 }
 .hud .info:has(.desel) .det h3 { padding-right: 28px; }
+.hud-top .r small.flow { margin-left: 4px; color: #9fe0a0; font: 600 10px system-ui, sans-serif; }
+.hud-top .r small.flow.neg { color: #ff9c86; }

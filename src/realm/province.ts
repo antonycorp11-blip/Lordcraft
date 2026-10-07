@@ -1,11 +1,12 @@
 import type { Game } from '../sim/game';
+import { DAY_SECS } from './data';
 import { clamp, chance, houseName, log, nid, player, remember, roll, seasonOf, vassalsOf } from './core';
 import type { Budget, House, Province, Realm } from './types';
 
 // A província do jogador é o próprio mapa RTS: casas abrigam civis, civis pagam impostos e
 // viram trabalhadores ou soldados (que recebem salário), comida e segurança mudam com o tempo.
 
-export const TAX_RATE = [0.15, 0.25, 0.38];
+export const TAX_RATE = [0.25, 0.4, 0.6]; // impostos são a prata que não acaba: crescem com o povo
 export const TAX_NAMES = ['Baixos', 'Normais', 'Altos'];
 const TAX_CONTENT = [12, 0, -16];
 export const WAGE = { worker: 0.25, soldier: 0.2, hero: 2 }; // prata por dia (soldado: por ponto de abastecimento)
@@ -86,17 +87,56 @@ export function dayPlayerProvince(g: Game, r: Realm) {
   const tax = st.taxDay;
   pl.res.silver += tax;
   r.budget.taxes += tax;
+  // fluxo de prata por minuto (média móvel) para a barra: minas, impostos, salários
+  const mined = pl.stats.gathered.silver - (r.lastMined ?? pl.stats.gathered.silver);
+  r.lastMined = pl.stats.gathered.silver;
+  const perMin = 60 / DAY_SECS;
+  const f = r.flow ?? { mine: 0, tax: 0, wage: 0 };
+  f.mine += (mined * perMin - f.mine) * 0.15;
+  f.tax += (tax * perMin - f.tax) * 0.3;
+  f.wage += (st.wagesDay * perMin - f.wage) * 0.3;
+  r.flow = f;
+  // salários: paga o que der. Sem prata não vira dívida (que comeria toda prata futura):
+  // os soldados ficam descontentes e, após 3 dias sem soldo, um deserta por dia e volta a ser civil.
   const wages = st.wagesDay;
-  if (pl.res.silver >= wages) pl.res.silver -= wages;
-  else {
-    // sem prata para os salários: soldados descontentes, trabalho mais lento
-    pl.debt = Math.min(400, pl.debt + wages - pl.res.silver);
-    pl.res.silver = 0;
-    p.content = Math.max(0, p.content - 0.5);
+  const paid = Math.min(wages, Math.max(0, pl.res.silver));
+  pl.res.silver -= paid;
+  pl.debt = 0;
+  r.budget.salaries += paid;
+  if (paid + 0.01 < wages) {
+    r.unpaidDays = (r.unpaidDays ?? 0) + 1;
+    p.content = Math.max(0, p.content - 0.8);
+    if (r.unpaidDays === 1) g.msg(0, 'Sem prata para o soldo! Dispense tropas ou trabalhadores, ou eles vão desertar.', '#ff9a6a');
+    if (r.unpaidDays >= 3) desert(g, r);
+  } else r.unpaidDays = 0;
+}
+
+/** Um soldado (ou trabalhador) sem soldo abandona o posto e volta para a população. */
+function desert(g: Game, r: Realm) {
+  const cands = g.units.filter((u) => u.alive && u.owner === 0 && !u.isHero && u.udef!.cls !== 'summon');
+  const mil = cands.filter((u) => !u.isWorker);
+  const u = (mil.length ? mil : cands).sort((a, b) => b.udef!.supply - a.udef!.supply)[0];
+  if (!u) return;
+  if (u.inside) g.releaseFromMine(u);
+  u.alive = false; u.dying = 0; g.removeEntity(u);
+  g.recomputeSupply();
+  home(r).pop += 1;
+  g.msg(0, `${u.udef!.name} desertou por falta de soldo.`, '#ff6a6a');
+}
+
+/** Dispensa unidades: saem do serviço, param de receber e voltam a ser civis. */
+export function dismiss(g: Game, r: Realm, ids: number[]): number {
+  let n = 0;
+  for (const id of ids) {
+    const u = g.ents.get(id);
+    if (!u || !u.alive || u.owner !== 0 || u.kind !== 'unit' || u.isHero) continue;
+    if (u.inside) g.releaseFromMine(u);
+    u.alive = false; u.dying = 0; g.removeEntity(u);
+    home(r).pop += 1;
+    n++;
   }
-  r.budget.salaries += wages;
-  // a dívida de salário é paga primeiro quando sobra prata
-  if (pl.debt > 0 && pl.res.silver > 0) { const pay = Math.min(pl.debt, pl.res.silver); pl.debt -= pay; pl.res.silver -= pay; }
+  if (n) g.recomputeSupply();
+  return n;
 }
 
 /** Civis disponíveis para recrutar. Treinar uma unidade tira um civil da população. */
@@ -143,7 +183,7 @@ export function seasonHouses(r: Realm) {
     }
     // tributo ao suserano (IA para IA é abstrato; ao jogador vira prata de verdade)
     if (h.liege && r.houses[h.liege]?.alive) {
-      const t = Math.max(15, Math.round(p.pop * 0.35 * p.wealth));
+      const t = Math.max(30, Math.round(p.pop * 2 * p.wealth)); // vassalos pagam de verdade: vale conquistar
       const paid = Math.min(t, Math.max(0, h.treasury));
       h.treasury -= paid;
       if (h.liege === r.player) {

@@ -49,7 +49,7 @@
   z-index: 60;
   display: flex;
   justify-content: center;
-  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  padding: 8px; /* o HUD já respeita o notch */
   background: #050c0add;
   pointer-events: auto;
   color: var(--ink);

@@ -578,7 +578,7 @@ function gatherUpdate(g: Game, e: Entity, dt: number): boolean {
       e.inside = true;
       e.insideId = target.id;
       target.workers++;
-      e.subT = res === 'silver' ? gd.mineTime : gd.crystalTime;
+      e.subT = res === 'silver' ? gd.mineTime * (target.deep ? 2.2 : 1) : gd.crystalTime; // mina profunda: mais lenta
       e.vx = e.vy = 0;
       e.carry = null; e.carryAmt = 0;
     } else {
@@ -592,6 +592,16 @@ function gatherUpdate(g: Game, e: Entity, dt: number): boolean {
 
 export function depleteResource(g: Game, r: Entity) {
   if (!r.alive) return;
+  if (g.mode === 'province' && r.kind === 'mine' && !r.deep) {
+    // no feudo a mina não some: o veio raso acabou, mas dá para escavar uma mina profunda
+    r.exhausted = true;
+    r.amount = 0;
+    r.hp = 0;
+    g.emit('collapse', r.cx, r.cy, { a: r.size });
+    g.alert(r.owner < 8 ? r.owner : 0, r.cx, r.cy, 'O veio raso da mina acabou. Selecione a mina para escavar uma mina profunda.', 'info');
+    for (const u of g.units) if (u.alive && u.order?.t === 'gather' && u.order.target === r.id && !u.inside) u.order.target = 0;
+    return;
+  }
   r.alive = false;
   r.amount = 0;
   g.world.setRes(r.tx, r.ty, r.size, false);

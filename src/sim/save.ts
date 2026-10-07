@@ -58,7 +58,7 @@ export function serialize(g: Game, aiStates: any[], name = 'Partida'): SaveData 
     projectiles: g.projectiles,
     over: g.over,
     winnerTeam: g.winnerTeam, pendingCasts: g.pendingCasts, proposals: g.proposals,
-    realm: g.realm, mode: g.mode, battle: g.battle,
+    realm: g.realm, mode: g.mode, battle: g.battle, regrow: g.regrow,
   };
   const human = g.players.find((p) => p && !p.ai);
   return {
@@ -117,6 +117,7 @@ export function deserialize(data: SaveData): Game {
   g.realm = s.realm ?? null;
   g.mode = s.mode ?? 'skirmish';
   g.battle = s.battle ?? null;
+  g.regrow = s.regrow ?? [];
   g.rebuildBSpatial();
   for (const u of g.units) if (u.alive && !u.inside) g.spatial.insert(u);
   g.recomputeSupply();

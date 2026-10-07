@@ -13,6 +13,7 @@ import { getArmor, getRange, getSpeed, skillLevel } from '../sim/stats';
 import { portraitHTML } from '../render/views';
 import { icon } from './icons';
 import { realmHudInfo } from './realm-ui';
+import { dismiss } from '../realm/province';
 import { atlasPosition, buildingAtlas } from '../render/atlas';
 import type { Session } from './session';
 import type { Input } from './input';
@@ -316,6 +317,12 @@ export class Hud {
       this.el.r_upkeep.parentElement!.classList.toggle('on', ri.wages > 0);
       this.el.r_upkeep.parentElement!.title = 'Salários de trabalhadores e soldados (prata por minuto)';
       setText(this.el.quest, ri.quest);
+      // prata: saldo por minuto ao lado do número (minas + impostos − salários)
+      const net = Math.round(ri.flow.mine + ri.flow.tax - ri.flow.wage);
+      if (!this.el.r_flow) { this.el.r_flow = document.createElement('small'); this.el.r_flow.className = 'flow'; this.el.r_silver.after(this.el.r_flow); }
+      setText(this.el.r_flow, `${net >= 0 ? '+' : ''}${net}/min`);
+      this.el.r_flow.classList.toggle('neg', net < 0);
+      this.el.r_silver.parentElement!.title = `Prata por minuto — minas +${Math.round(ri.flow.mine)}, impostos +${Math.round(ri.flow.tax)}, salários −${Math.round(ri.flow.wage)}`;
       setText(this.el.badge, ri.unread ? String(ri.unread) : '');
       this.el.badge.hidden = !ri.unread;
       this.el.badge.parentElement!.classList.toggle('alarm', ri.danger);
@@ -433,7 +440,8 @@ export class Hud {
     const pc = g.players[e.owner]?.color ?? (e.owner === 8 ? '#8a7a66' : '#c9b48a');
     const owner = g.players[e.owner]?.name ?? (e.owner === 8 ? 'Criaturas neutras' : e.owner === 9 ? 'Neutro' : '');
     if (e.kind === 'mine' || e.kind === 'crystal') {
-      return `<div class="single"><div class="por res-por ${e.kind}"></div><div class="det"><h3>${e.kind === 'mine' ? 'Veio de Prata' : 'Cristal de Éter'}</h3><p class="sub">Jazida</p><p class="big">${fmt(e.amount)} <small>${e.kind === 'mine' ? 'prata' : 'éter'} restantes</small></p><p class="hint">${e.extractor ? 'Extrator instalado.' : 'Trabalhadores coletam com clique direito.'}</p></div></div>`;
+      const amount = e.deep ? '<p class="big">Mina profunda <small>não se esgota, rende mais devagar</small></p>' : e.exhausted ? '<p class="big">Veio esgotado <small>escave uma mina profunda</small></p>' : `<p class="big">${fmt(e.amount)} <small>${e.kind === 'mine' ? 'prata' : 'éter'} restantes</small></p>`;
+      return `<div class="single"><div class="por res-por ${e.kind}"></div><div class="det"><h3>${e.kind === 'mine' ? 'Veio de Prata' : 'Cristal de Éter'}</h3><p class="sub">Jazida</p>${amount}<p class="hint">${e.extractor ? 'Extrator instalado.' : 'Trabalhadores coletam com clique direito.'}</p></div></div>`;
     }
     if (e.kind === 'item' || e.kind === 'chest') {
       const d = ITEMS[e.itemId];
@@ -556,6 +564,15 @@ export class Hud {
     if (!own.length) {
       // acampamento mercenário selecionado
       const sel = selected(s)[0];
+      if (sel?.kind === 'mine' && sel.exhausted && !sel.deep && g.realm) {
+        const cost = { silver: 60, wood: 250 };
+        return [{
+          id: 'deepen', label: 'Escavar mina profunda', key: 'E', icon: icon('hammer'), cost,
+          desc: 'Abre galerias fundas: a mina volta a render prata para sempre, mais devagar que o veio raso.',
+          disabled: !g.canAfford(s.pid, cost), reason: 'Recursos insuficientes',
+          run: () => { if (!g.pay(s.pid, cost)) return; sel.deep = true; sel.exhausted = false; sel.amount = 1e9; sel.hp = sel.maxHp; g.emit('build', sel.cx, sel.cy, { a: sel.size }); this.feedback('Mina profunda aberta. Mande trabalhadores para ela.'); },
+        }];
+      }
       if (sel?.bdef?.hires) {
         return sel.bdef.hires.map((u, i) => ({
           id: 'hire:' + u, label: UNITS[u].name, key: 'QWE'[i], icon: portraitHTML(u, g.players[s.pid].color), cost: UNITS[u].cost,
@@ -625,6 +642,11 @@ export class Hud {
     if (full && (!worker || own.some((e) => !e.isWorker))) {
       out.push({ id: 'guard', label: 'Defender região', key: 'G', icon: icon('guard'), active: mode === 'guard', desc: 'Defende uma área: ataca invasores e retorna.', run: () => { s.mode = { k: 'guard' }; } });
       out.push({ id: 'retreat', label: 'Recuar', key: 'X', icon: icon('retreat'), desc: 'Retirada organizada até o centro mais próximo, sem revidar.', run: () => issueRetreat(g, s.pid, unitIds) });
+    }
+    if (g.realm && own.some((e) => e.kind === 'unit' && !e.isHero)) {
+      const n = own.filter((e) => e.kind === 'unit' && !e.isHero).length;
+      out.push({ id: 'dismiss', label: 'Dispensar', key: 'D', icon: icon('cancel'), desc: `Dispensa ${n === 1 ? 'esta unidade' : `estas ${n} unidades`}: param de receber salário e voltam a ser civis (pagam impostos e plantam).`,
+        run: () => { const k = dismiss(g, g.realm!, own.map((e) => e.id)); setSelection(s, []); this.feedback(`${k} dispensado(s). Voltaram a ser civis.`); } });
     }
     if (worker) {
       out.push({ id: 'build', label: 'Construir', key: 'B', icon: icon('build'), desc: 'Abre o menu de construção.', run: () => { this.page = 'build'; } });

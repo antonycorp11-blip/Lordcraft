@@ -494,7 +494,7 @@ export function realmHudInfo(r: Realm, g: Session['g']) {
   const quest = step.next ? `Rumo a ${step.name} ${step.reqs.filter((q) => q.ok).length}/${step.reqs.length}` : 'Rei de Aldaris';
   return {
     pop: Math.floor(p.pop), housing: st.housing, food: Math.floor(p.food), foodDay: st.foodDay, season: seasonLabel(r), unread: unread(r),
-    wages: st.wagesDay * (60 / DAY_SECS), quest,
+    wages: st.wagesDay * (60 / DAY_SECS), quest, flow: r.flow ?? { mine: 0, tax: 0, wage: 0 },
     danger: r.armies.some((a) => a.owner !== r.player && a.target === p.id && a.intent !== 'return') || !!r.raid,
   };
 }

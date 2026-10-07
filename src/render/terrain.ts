@@ -261,6 +261,12 @@ export class TerrainView {
     this.dirtyAround(i);
   }
 
+  /** Árvore cresceu de novo onde havia um toco. */
+  onTreeGrown(i: number) {
+    this.stumps.delete(i);
+    this.dirtyAround(i);
+  }
+
   /** Árvore sendo trabalhada: o cenário é pintado, então não há balanço. */
   shake(_i: number) {}
 }

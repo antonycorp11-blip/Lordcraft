@@ -170,6 +170,7 @@ export class Renderer {
     this.terrain.update(x0, y0, x1, y1, far, cam.zoom);
     while (g.world.changedTrees.length) this.terrain.onTreeRemoved(g.world.changedTrees.pop()!);
     while (g.world.damagedTrees.length) this.terrain.onTreeDamaged(g.world.damagedTrees.pop()!);
+    while (g.world.grownTrees.length) this.terrain.onTreeGrown(g.world.grownTrees.pop()!);
 
     // escuridão
     const dark = g.darkness();

@@ -26,6 +26,8 @@ export class World {
   treeVersion = 1;
   changedTrees: number[] = []; // células alteradas para o renderizador
   damagedTrees: number[] = []; // árvores que perderam madeira (o desenho mostra o dano)
+  grownTrees: number[] = []; // árvores que voltaram a crescer (o desenho tira o toco)
+  felled: number[] = []; // árvores derrubadas, para a simulação plantar de novo
 
   constructor(w: number, h: number) {
     this.w = w;
@@ -80,6 +82,7 @@ export class World {
     this.block[i] &= ~BL_TREE;
     this.treeVersion++;
     this.changedTrees.push(i);
+    this.felled.push(i);
   }
 
   setBuilding(x0: number, y0: number, size: number, id: number, on: boolean) {

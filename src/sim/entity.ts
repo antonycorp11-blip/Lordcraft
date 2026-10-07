@@ -133,6 +133,8 @@ export class Entity {
   amount = 0;
   workers = 0; // mineradores dentro
   extractor = 0; // id do extrator sobre o cristal
+  exhausted = false; // mina de veio raso esgotada (modo feudo: pode virar mina profunda)
+  deep = false; // mina profunda: não acaba, rende mais devagar
 
   // ---- neutros ----
   campId = -1;

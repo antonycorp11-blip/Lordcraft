@@ -191,4 +191,7 @@ export interface Realm {
   /** prata que chegou de fora (tributos, caravanas) e ainda vai para o cofre do jogador */
   pendingSilver: number;
   seasonIndex: number;   // estações completas
+  unpaidDays?: number;   // dias seguidos sem pagar o soldo
+  lastMined?: number;
+  flow?: { mine: number; tax: number; wage: number }; // prata por minuto
 }
