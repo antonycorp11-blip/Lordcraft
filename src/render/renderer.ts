@@ -164,7 +164,8 @@ export class Renderer {
     const g = this.g, cam = this.cam;
     this.world.style.transform = `translate3d(${(-cam.x * cam.zoom).toFixed(1)}px,${(-cam.y * cam.zoom).toFixed(1)}px,0) scale(${cam.zoom})`;
     const [x0, y0, x1, y1] = cam.viewRect(2);
-    const far = cam.zoom < 0.5;
+    // a visão "distante" (árvores trocadas por bolinhas) foi desligada: o mapa fica igual em qualquer zoom
+    const far = false;
     if (far !== this.lastFar) { this.root.classList.toggle('far', far); this.lastFar = far; }
     this.terrain.update(x0, y0, x1, y1, far, cam.zoom);
     while (g.world.changedTrees.length) this.terrain.onTreeRemoved(g.world.changedTrees.pop()!);

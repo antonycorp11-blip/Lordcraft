@@ -7,7 +7,7 @@ export class Camera {
   zoom = 1;
   vw = 800;
   vh = 600;
-  minZoom = 0.32;
+  minZoom = 0.5; // abaixo disso o mapa precisaria de uma versão simplificada, que destoava da arte
   maxZoom = 1.7;
   worldW: number;
   worldH: number;
