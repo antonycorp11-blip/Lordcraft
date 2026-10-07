@@ -84,10 +84,11 @@ export function paintScenery(ctx: CanvasRenderingContext2D, w: World, seed: numb
         ctx.beginPath();
         ctx.ellipse(lx + (h * 60) % 16 + 12, ly + 12, 12, 3, 0, Math.PI * 1.1, Math.PI * 1.9);
         ctx.stroke();
-      } else if (t === Ter.Road && h < 0.25) {
-        pebble(ctx, lx + (h * 90) % 20, ly + (h * 55) % 20, 5, 4);
+      } else if (t === Ter.Road) {
+        ctx.drawImage(roadDisc(), lx + 16 - 26 + (h - 0.5) * 4, ly + 16 - 26 + (hash2(y, x, S + 2) - 0.5) * 4);
+        if (h < 0.18) pebble(ctx, lx + (h * 90) % 20, ly + (h * 55) % 20, 5, 4);
       } else if (w.block[i] === 0 && !w.tree[i]) {
-        if (h < 0.014 && (t === Ter.Grass || t === Ter.Moss || t === Ter.Dirt)) {
+        if (h < 0.03 && (t === Ter.Grass || t === Ter.Moss || t === Ter.Dirt)) {
           const list = t === Ter.Dirt ? [0, 1, 5, 12] : [2, 3, 4, 2, 3, 0, 1, 5];
           const k = list[Math.floor(hash2(x * 7, y * 11, S + 3) * list.length)];
           const px = lx + (h * 500) % 10 - 4, py = ly - 12;
@@ -110,18 +111,21 @@ export function paintScenery(ctx: CanvasRenderingContext2D, w: World, seed: numb
           c.restore();
         } });
       }
-      // montanha
-      if (t === Ter.Rock) {
-        const v = Math.floor(h * 4);
-        const sc = v === 1 ? 1.15 : v === 2 ? 0.8 : 1;
-        const rot = v === 2 ? 9 : v === 3 ? -13 : 0;
-        items.push({ z: (y + 1) * TILE, draw: (c) => {
+      // montanha: um rochedo por célula 2x2, de tamanho e posição variados (maciço, não grade)
+      if (t === Ter.Rock && (x & 1) === 0 && (y & 1) === 0) {
+        let n = 0;
+        for (let k = 0; k < 4; k++) { const xx = x + (k & 1), yy = y + (k >> 1); if (xx < w.w && yy < w.h && w.ter[w.idx(xx, yy)] === Ter.Rock) n++; }
+        const sc = (n === 4 ? 1.55 : 1.15) + hash2(x, y, S + 21) * 0.45;
+        const rot = (hash2(y, x, S + 22) - 0.5) * 30;
+        const flip = hash2(x, y, S + 23) < 0.5 ? -1 : 1;
+        const jx = (hash2(x, y, S + 24) - 0.5) * 18, jy = (hash2(y, x, S + 25) - 0.5) * 14;
+        items.push({ z: (y + 2) * TILE, draw: (c) => {
           const [sx, sy, sw, sh] = cell(world, 4, 3, 2, 1);
           c.save();
-          shadow(c, lx + 30, ly + 42, 24 * sc, 7 * sc);
-          c.translate(lx - 4 + 27.5, ly - 10 + 27.5);
+          shadow(c, lx + 32 + jx + 6, ly + 44 + jy, 26 * sc, 8 * sc);
+          c.translate(lx + 32 + jx, ly + 22 + jy);
           c.rotate((rot * Math.PI) / 180);
-          c.scale(sc, sc);
+          c.scale(sc * flip, sc);
           c.drawImage(world, sx, sy, sw, sh, -27.5, -27.5, 55, 55);
           c.restore();
         } });
@@ -151,6 +155,23 @@ export function paintScenery(ctx: CanvasRenderingContext2D, w: World, seed: numb
   }
   items.sort((a, b) => a.z - b.z);
   for (const it of items) it.draw(ctx);
+}
+
+let disc: HTMLCanvasElement | null = null;
+/** Mancha de terra batida com borda suave: lado a lado, viram um caminho contínuo. */
+function roadDisc(): HTMLCanvasElement {
+  if (disc) return disc;
+  disc = document.createElement('canvas');
+  disc.width = disc.height = 52;
+  const c = disc.getContext('2d');
+  if (!c) return disc;
+  const g = c.createRadialGradient(26, 26, 4, 26, 26, 26);
+  g.addColorStop(0, 'rgba(150,128,86,0.95)');
+  g.addColorStop(0.55, 'rgba(140,118,78,0.85)');
+  g.addColorStop(1, 'rgba(120,100,64,0)');
+  c.fillStyle = g;
+  c.fillRect(0, 0, 52, 52);
+  return disc;
 }
 
 /** Sombra barata (elipse translúcida): a sombra borrada do canvas é lenta no celular. */

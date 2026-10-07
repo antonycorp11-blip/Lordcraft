@@ -15,6 +15,8 @@ export interface MatchConfig {
   players: (GameSetupPlayer & { start?: number })[];
   reveal?: boolean;
   startRes?: { silver: number; wood: number; aether: number };
+  /** um só bioma no mapa todo (província do feudo: paisagem coerente) */
+  biome?: number;
 }
 
 export function createGame(cfg: MatchConfig): { game: Game; ais: AIController[] } {
@@ -29,7 +31,7 @@ export function createGame(cfg: MatchConfig): { game: Game; ais: AIController[] 
   const biomes: number[] = [];
   for (let s = 0; s < nStarts; s++) {
     const k = startOf.indexOf(s);
-    biomes[s] = k >= 0 ? FACTIONS[players[k].faction].biome : (s + 1) % 4;
+    biomes[s] = cfg.biome !== undefined ? cfg.biome : k >= 0 ? FACTIONS[players[k].faction].biome : (s + 1) % 4;
   }
   const gen = generateMap(tpl, cfg.seed, biomes);
   const g = new Game(gen.world, cfg.seed, tpl.id);
@@ -108,7 +110,7 @@ export function createGame(cfg: MatchConfig): { game: Game; ais: AIController[] 
 export function createCampaign(o: DynastyOptions & { faction: FactionId }): { game: Game; ais: AIController[] } {
   const tpl = MAPS[0];
   const { game: g, ais } = createGame({
-    mapId: tpl.id, seed: tpl.seed,
+    mapId: tpl.id, seed: tpl.seed, biome: FACTIONS.valmir.biome,
     players: [{ name: `Casa ${o.houseName}`, faction: o.faction, color: PLAYER_COLORS[0], ai: false, team: 1, start: 0 }],
   });
   addRaider(g);

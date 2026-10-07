@@ -5,5 +5,6 @@ export default defineConfig({
   base: './',
   server: { port: 8765, host: '127.0.0.1' },
   build: { target: 'es2022', sourcemap: true },
-  test: { environment: 'node', testTimeout: 120000 },
+  // prévias de arte (tools/preview) só rodam com PREVIEW=1, fora da suíte normal
+  test: { environment: 'node', testTimeout: 120000, include: process.env.PREVIEW ? ['tools/preview/*.test.ts'] : ['tests/**/*.test.ts'] },
 });

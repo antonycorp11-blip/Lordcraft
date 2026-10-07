@@ -107,7 +107,7 @@ export function generateMap(tpl: MapTemplate, seed: number, startBiomes: number[
     else if (e < lake + 0.035) w.ter[i] = Ter.Shallow;
     else if (e < lake + 0.06) w.ter[i] = Ter.Sand;
     else if (e > 0.74) w.ter[i] = Ter.Rock;
-    else if (e > 0.6) w.elev[i] = 1;
+    // planaltos saíram: suas bordas viravam "cercas" de penhasco sem sentido no campo
   }
 
   // Rio
@@ -152,6 +152,35 @@ export function generateMap(tpl: MapTemplate, seed: number, startBiomes: number[
   exps.forEach((e) => clearArea(e.x, e.y, 9));
   crys.forEach((c) => clearArea(c.x, c.y, 4, false));
   if (tpl.boss) clearArea(tpl.boss[0] * N, tpl.boss[1] * N, 6);
+
+  // -------- 3b. Limpeza: nada de planaltos e pedras minúsculos (viravam "blocos" soltos no campo) --------
+  const regions = (pred: (i: number) => boolean, minSize: number, apply: (i: number) => void) => {
+    const seen = new Uint8Array(N * N);
+    for (let s0 = 0; s0 < N * N; s0++) {
+      if (seen[s0] || !pred(s0)) continue;
+      const comp: number[] = [];
+      const st = [s0];
+      seen[s0] = 1;
+      while (st.length) {
+        const k = st.pop()!;
+        comp.push(k);
+        const x = k % N, y = (k / N) | 0;
+        for (const j of [x > 0 ? k - 1 : -1, x < N - 1 ? k + 1 : -1, y > 0 ? k - N : -1, y < N - 1 ? k + N : -1])
+          if (j >= 0 && !seen[j] && pred(j)) { seen[j] = 1; st.push(j); }
+      }
+      if (comp.length < minSize) for (const k of comp) apply(k);
+    }
+  };
+  // pontas finas de planalto (1 tile de largura) também somem
+  for (let pass = 0; pass < 2; pass++)
+    for (let y = 1; y < N - 1; y++) for (let x = 1; x < N - 1; x++) {
+      const i = idx(x, y);
+      if (w.elev[i] !== 1) continue;
+      const n = (w.elev[i - 1] ? 1 : 0) + (w.elev[i + 1] ? 1 : 0) + (w.elev[i - N] ? 1 : 0) + (w.elev[i + N] ? 1 : 0);
+      if (n <= 1) w.elev[i] = 0;
+    }
+  regions((i) => w.elev[i] === 1, 70, (i) => { w.elev[i] = 0; });
+  regions((i) => w.ter[i] === Ter.Rock, 30, (i) => { w.ter[i] = M[i] < 0.38 ? BIOME_ALT[w.biome[i]] : BIOME_BASE[w.biome[i]]; });
 
   // -------- 4. Penhascos --------
   const computeCliffs = () => {
@@ -237,13 +266,13 @@ export function generateMap(tpl: MapTemplate, seed: number, startBiomes: number[
       const t = w.ter[i];
       if (reserved[i] || w.cliff[i] || t === Ter.Water || t === Ter.Shallow || t === Ter.Rock || t === Ter.Road || t === Ter.Bridge || t === Ter.Sand) continue;
       const b = w.biome[i];
-      const thr = b === 2 ? 0.5 : b === 1 ? 0.62 : 0.56;
+      const thr = (b === 2 ? 0.5 : b === 1 ? 0.62 : 0.56) + 0.07; // menos árvores: bosques, não um tapete
       const edge = Math.min(x, y, N - 1 - x, N - 1 - y);
       let m = M[i] + (edge < 8 ? (8 - edge) * 0.05 : 0);
       // cinturão de floresta ao redor das bases (proteção natural)
       for (const s of starts) {
         const d = Math.hypot(x - s.x, y - s.y);
-        if (d > 13 && d < 18) m += 0.1;
+        if (d > 15 && d < 19) m += 0.04;
       }
       if (m > thr && hash2(x, y, seed + 11) < 0.93) {
         const kind = b === 3 ? 1 : b === 1 ? 2 : b === 2 ? 3 : (hash2(x, y, seed + 12) < 0.3 ? 1 : 0);

@@ -168,7 +168,9 @@ export class TerrainView {
           const xx = x + (k & 1), yy = y + (k >> 1);
           if (!w.inside(xx, yy)) continue;
           const t = w.ter[w.idx(xx, yy)];
-          counts.set(t, (counts.get(t) ?? 0) + (t === Ter.Water ? 1.2 : t === Ter.Road || t === Ter.Bridge ? 1.6 : 1));
+          // estradas são pintadas por cima como caminho contínuo; aqui contam como o chão em volta
+          if (t === Ter.Road) continue;
+          counts.set(t, (counts.get(t) ?? 0) + (t === Ter.Water ? 1.2 : t === Ter.Bridge ? 1.6 : 1));
           hi += w.elev[w.idx(xx, yy)];
         }
         let dom = Ter.Grass, dc = -1;
