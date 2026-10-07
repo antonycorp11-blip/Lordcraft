@@ -22,7 +22,7 @@ const SKIP = new Set(['udef', 'bdef', 'path', 'pathI', 'pathKey']);
 
 export interface SaveData {
   v: 1;
-  meta: { name: string; date: string; time: number; mapId: string; faction: string };
+  meta: { name: string; date: string; time: number; mapId: string; faction: string; dynasty?: string };
   state: any;
   ai: any[];
 }
@@ -58,11 +58,12 @@ export function serialize(g: Game, aiStates: any[], name = 'Partida'): SaveData 
     projectiles: g.projectiles,
     over: g.over,
     winnerTeam: g.winnerTeam, pendingCasts: g.pendingCasts, proposals: g.proposals,
+    realm: g.realm, mode: g.mode, battle: g.battle,
   };
   const human = g.players.find((p) => p && !p.ai);
   return {
     v: 1,
-    meta: { name, date: new Date().toISOString(), time: g.time, mapId: g.mapId, faction: human?.faction ?? '' },
+    meta: { name, date: new Date().toISOString(), time: g.time, mapId: g.mapId, faction: human?.faction ?? '', dynasty: g.realm ? g.realm.houses[g.realm.player].name : undefined },
     state: JSON.parse(JSON.stringify(state, (_key, value) => typeof value === 'number' && !Number.isFinite(value) ? { $number: String(value) } : value)),
     ai: aiStates,
   };
@@ -113,6 +114,9 @@ export function deserialize(data: SaveData): Game {
   g.winnerTeam = s.winnerTeam ?? -1;
   g.dayLength = s.dayLength ?? 420;
   g.over = s.over;
+  g.realm = s.realm ?? null;
+  g.mode = s.mode ?? 'skirmish';
+  g.battle = s.battle ?? null;
   g.rebuildBSpatial();
   for (const u of g.units) if (u.alive && !u.inside) g.spatial.insert(u);
   g.recomputeSupply();

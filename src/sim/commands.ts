@@ -271,6 +271,11 @@ export function canTrain(g: Game, owner: number, b: Entity, unit: string): { ok:
     if (p.heroCount > 0 || queued || [...g.heroRecords.values()].some((r) => r.owner === owner)) return { ok: false, reason: 'Herói já convocado' };
   }
   if (b.bqueue.length >= 7) return { ok: false, reason: 'Fila cheia' };
+  if (g.realm && owner === 0) {
+    // no feudo cada recruta sai da população civil da província
+    if (d.cls !== 'hero' && g.realm.provinces[g.realm.houses[g.realm.player].province].pop < 1) return { ok: false, reason: 'Sem civis livres: construa casas e espere a população crescer' };
+    if (d.cls === 'hero' && g.realm.armies.some((a) => a.owner === g.realm!.player && a.units.some((u) => u.hero))) return { ok: false, reason: 'Herói já convocado' };
+  }
   if (!g.canAfford(owner, d.cost)) return { ok: false, reason: 'Recursos insuficientes' };
   return { ok: true, reason: '' };
 }
@@ -284,6 +289,7 @@ export function train(g: Game, owner: number, bId: number, unit: string): boolea
   g.pay(owner, d.cost);
   const mul = FACTIONS[g.players[owner].faction].trainMul;
   b.bqueue.push({ kind: 'unit', id: unit, t: 0, total: d.time * mul, cost: d.cost });
+  if (g.realm && owner === 0 && d.cls !== 'hero') g.realm.provinces[g.realm.houses[g.realm.player].province].pop -= 1;
   return true;
 }
 
@@ -361,6 +367,7 @@ export function cancelQueue(g: Game, owner: number, bId: number, index: number) 
   if (!b || index < 0 || index >= b.bqueue.length) return;
   const q = b.bqueue.splice(index, 1)[0];
   g.refund(owner, q.cost);
+  if (g.realm && owner === 0 && q.kind === 'unit' && UNITS[q.id]?.cls !== 'hero') g.realm.provinces[g.realm.houses[g.realm.player].province].pop += 1;
   if (q.kind === 'upgrade') b.upgrading = false;
   g.recomputeSupply();
 }

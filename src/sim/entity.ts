@@ -136,6 +136,7 @@ export class Entity {
 
   // ---- neutros ----
   campId = -1;
+  personId = 0; // pessoa da dinastia ligada a este herói (modo feudo)
   campX = 0; campY = 0;
   returning = false;
   itemId = '';
@@ -185,6 +186,7 @@ export class Player {
   heroCount = 0;
   startX = 0; startY = 0;
   personality = 'equilibrada';
+  raider = false; // invasores do modo feudo: não perdem por falta de edifícios
   difficulty = 'normal';
   stats: PlayerStats = {
     gathered: { silver: 0, wood: 0, aether: 0 }, trained: 0, lost: 0, kills: 0, buildingsLost: 0, buildingsBuilt: 0, razed: 0,

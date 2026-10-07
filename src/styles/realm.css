@@ -1,0 +1,384 @@
+/* realm.css — tela do feudo (mapa estratégico, casas, cartas, mercado, exército, dinastia,
+   governo e crônica), brasões em CSS e acréscimos do HUD no modo feudo. */
+
+/* ---------- Brasões ---------- */
+.crest {
+  --c1: #24476b;
+  --c2: #d9dde3;
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 38px;
+  background: var(--c1);
+  clip-path: polygon(0 0, 100% 0, 100% 58%, 50% 100%, 0 58%);
+  box-shadow: inset 0 0 0 2px #0006, inset 0 2px 0 3px #ffffff1a;
+  color: var(--c2);
+  font: 700 17px/1 Georgia, 'Times New Roman', serif;
+  vertical-align: middle;
+}
+.crest b {
+  margin-top: -14%;
+  text-shadow: 0 0 2px #000c, 0 1px 1px #000c;
+}
+.crest.cp-party { background: linear-gradient(90deg, var(--c1) 50%, var(--c2) 50%); }
+.crest.cp-fess { background: linear-gradient(180deg, var(--c1) 36%, var(--c2) 36% 60%, var(--c1) 60%); }
+.crest.cp-pale { background: linear-gradient(90deg, var(--c1) 36%, var(--c2) 36% 64%, var(--c1) 64%); }
+.crest.cp-bend { background: linear-gradient(135deg, var(--c1) 38%, var(--c2) 38% 58%, var(--c1) 58%); }
+.crest.cp-chief { background: linear-gradient(180deg, var(--c2) 30%, var(--c1) 30%); }
+.crest.cp-quarter { background: conic-gradient(from 0deg at 50% 45%, var(--c2) 0 25%, var(--c1) 0 50%, var(--c2) 0 75%, var(--c1) 0); }
+.crest.cp-cross {
+  background:
+    linear-gradient(90deg, transparent 40%, var(--c2) 40% 60%, transparent 60%),
+    linear-gradient(180deg, var(--c1) 34%, var(--c2) 34% 52%, var(--c1) 52%);
+}
+.crest.cp-chevron {
+  background:
+    linear-gradient(to top right, transparent 46%, var(--c2) 46% 62%, transparent 62%) left bottom / 50% 70% no-repeat,
+    linear-gradient(to top left, transparent 46%, var(--c2) 46% 62%, transparent 62%) right bottom / 50% 70% no-repeat,
+    var(--c1);
+}
+.crest.big { width: 46px; height: 54px; font-size: 24px; }
+.crest.huge { width: 120px; height: 142px; font-size: 64px; }
+
+/* ---------- Janela do feudo ---------- */
+.realm {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  background: #050c0add;
+  pointer-events: auto;
+  color: var(--ink);
+}
+.realm-win {
+  display: flex;
+  flex-direction: column;
+  width: min(880px, 100%);
+  min-height: 0;
+  border: 1px solid var(--edge);
+  border-radius: 18px;
+  background: #0d1613;
+  overflow: hidden;
+}
+.realm-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid #ffffff12;
+}
+.realm-head h2 {
+  margin: 0;
+  font: 700 20px Georgia, serif;
+  color: var(--gold);
+}
+.realm-head p { font-size: 12px; color: var(--dim); }
+.realm-head > div { flex: 1; min-width: 0; }
+.realm .realm-x {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--edge);
+  background: #ffffff0d;
+  font-size: 16px;
+}
+.realm-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid #ffffff12;
+}
+.realm-tabs::-webkit-scrollbar { display: none; }
+.realm .realm-tabs button {
+  position: relative;
+  flex: none;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: none;
+  box-shadow: none;
+  color: var(--dim);
+  font: 600 13px system-ui, sans-serif;
+}
+.realm .realm-tabs button.on { border-color: var(--edge); background: #ffffff10; color: var(--gold); }
+.realm-tabs em {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 17px;
+  padding: 1px 4px;
+  border-radius: 9px;
+  background: #c8432f;
+  color: #fff;
+  font: 700 10px/15px system-ui;
+  font-style: normal;
+}
+.realm-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px;
+  font: 13px/1.45 system-ui, -apple-system, sans-serif;
+}
+.realm h3 { margin: 0 0 6px; font: 700 15px Georgia, serif; color: var(--gold); }
+.realm .hint { font-size: 12px; color: var(--dim); }
+.realm .warn { color: #f28b75; }
+.realm button {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font: 600 12px system-ui, sans-serif;
+}
+.realm button.danger { border-color: #a5483a; color: #f2a08f; }
+.realm select, .realm input { padding: 7px 8px; border-radius: 8px; font: 13px system-ui, sans-serif; }
+.realm label { gap: 4px; font: 11px system-ui, sans-serif; letter-spacing: 0.04em; color: var(--dim); }
+.realm label small { color: #7f8f84; letter-spacing: 0; }
+
+/* cartões */
+.realm .card {
+  margin: 0 0 10px;
+  padding: 12px;
+  border: 1px solid #ffffff14;
+  border-radius: 14px;
+  background: #111c18;
+  overflow-x: auto;
+}
+.realm .card.open { border-color: var(--edge); }
+.realm .card.dead { opacity: 0.45; }
+.realm .card.alert { border-color: #c8432f88; background: #2a1411; }
+.realm .card.letter.new { border-color: var(--gold); }
+.realm .card-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+.realm .card-h h3 { margin: 0; }
+.realm .motto { font: italic 12px Georgia, serif; color: #c9b98a; }
+.realm .acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.realm .ltext { margin: 4px 0; font: 14px/1.5 Georgia, serif; color: #e8dfc3; }
+.realm ul.plain, .realm ol.plain { margin: 6px 0 0; padding-left: 0; list-style: none; display: grid; gap: 6px; }
+.realm ol.plain { padding-left: 20px; list-style: decimal; }
+.realm .mem { margin: 8px 0 0; padding-left: 18px; font-size: 12px; }
+.realm .mem .neg { color: #e9a08f; }
+.realm .mem .pos { color: #a8ce7c; }
+
+.chip {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid #ffffff22;
+  background: #ffffff0d;
+  color: var(--dim);
+  font: 600 10px/16px system-ui, sans-serif;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.chip.war { border-color: #c8432f; color: #ff9c86; background: #c8432f22; }
+.chip.ally { border-color: #5e9a4b; color: #a8ce7c; background: #5e9a4b22; }
+.chip.vas { border-color: #c9a227; color: #f0d48e; background: #c9a22722; }
+.chip.lord { border-color: #8d6bc4; color: #c9b4ef; background: #8d6bc422; }
+.chip.me { border-color: #4b84c8; color: #9cc6f2; }
+
+.obars { display: grid; gap: 4px; }
+.obar { display: grid; grid-template-columns: 92px 1fr 34px; align-items: center; gap: 8px; font-size: 11px; color: var(--dim); }
+.obar i { height: 6px; border-radius: 3px; background: #ffffff12; overflow: hidden; }
+.obar i b { display: block; height: 100%; border-radius: 3px; background: #c9b98a; }
+.obar.trust i b { background: linear-gradient(90deg, #c8432f, #c9b98a 50%, #6fb35a); background-size: 200px 100%; }
+.obar.fear i b { background: #b4553f; }
+.obar.legit i b { background: #8d6bc4; }
+.obar em { font-style: normal; text-align: right; color: var(--ink); }
+
+/* mapa estratégico */
+.fmap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.35;
+  max-height: 58dvh;
+  margin: 0 auto 6px;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 30% 60%, #2b3b2455, transparent 45%),
+    radial-gradient(circle at 75% 30%, #3b2a2455, transparent 40%),
+    radial-gradient(circle at 85% 60%, #1d3b4a66, transparent 35%),
+    #15211b;
+  border: 1px solid #ffffff14;
+  overflow: hidden;
+}
+.fmap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fmap line { stroke: #c9b98a77; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.fmap line.danger { stroke: #c9806a99; stroke-dasharray: 5 4; }
+.fmap .rd {
+  position: absolute;
+  translate: -50% -50%;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: #15211bcc;
+  color: #a99f80;
+  font: 600 9px/14px system-ui;
+  pointer-events: none;
+}
+.realm .prov {
+  position: absolute;
+  translate: -50% -50%;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 2px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  box-shadow: none;
+  z-index: 2;
+}
+.realm .prov span {
+  max-width: 92px;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: #0d1613cc;
+  color: var(--ink);
+  font: 600 10px/14px system-ui;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.realm .prov .chip { margin: 0; font-size: 9px; line-height: 13px; padding: 0 5px; }
+.realm .prov.sel .crest, .realm .prov:hover .crest { scale: 1.18; }
+.realm .prov.mine span { color: var(--gold); }
+.tok {
+  position: absolute;
+  z-index: 3;
+  width: 10px;
+  height: 10px;
+  translate: -50% -50%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.legend .tok { position: relative; display: inline-block; translate: 0 1px; margin: 0 3px 0 6px; }
+.tok.car { background: #9b8a62; box-shadow: 0 0 0 2px #0008; }
+.tok.car.mine { background: #f0d48e; }
+.tok.army { width: 12px; height: 12px; border-radius: 2px; background: var(--hc, #888); box-shadow: 0 0 0 2px #000a; }
+.tok.army.mine { background: #4b84c8; }
+.tok.army.foe { background: #e0503a; animation: tokpulse 1s ease-in-out infinite alternate; }
+.tok.letter { width: 7px; height: 7px; background: #fff3cf; box-shadow: 0 0 6px #fff3cf; }
+@keyframes tokpulse { to { box-shadow: 0 0 0 5px #e0503a55; } }
+
+/* mercado e formulários */
+.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tbl th { text-align: left; color: var(--dim); font-weight: 600; padding: 4px 6px; }
+.tbl td { padding: 5px 6px; border-top: 1px solid #ffffff0d; }
+.tbl td.acts { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.tbl td.acts button { padding: 5px 8px; font-size: 11px; }
+.tbl td.acts small { color: var(--dim); font-weight: 400; }
+.tbl tr.mine td { color: var(--gold); }
+.tbl tr.warrow td { color: #ff9c86; }
+.realm .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 6px 0 8px; }
+.realm .form-row.laws { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.realm .pick { display: grid; grid-template-columns: 1fr 34px 54px 34px; align-items: center; gap: 6px; margin: 4px 0; }
+.realm .pick button { padding: 4px 0; font-size: 16px; }
+.realm .pick b { text-align: center; }
+.realm .wed { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; margin-top: 4px; }
+.realm .wed select { width: auto; flex: 1 1 120px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin: 6px 0; }
+.stats-grid > div { display: grid; padding: 8px 10px; border-radius: 10px; background: #ffffff08; }
+.stats-grid span { font-size: 11px; color: var(--dim); }
+.stats-grid b { font: 700 18px Georgia, serif; color: var(--ink); }
+.stats-grid small { font-size: 10px; color: #7f8f84; }
+.reqs { margin: 8px 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.reqs li::before { content: '○ '; color: #c9806a; }
+.reqs li.ok { color: #a8ce7c; }
+.reqs li.ok::before { content: '✓ '; color: #a8ce7c; }
+.person.dead { opacity: 0.5; }
+.person small { color: var(--dim); }
+.chron { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.chron li { padding: 8px 10px; border-left: 3px solid #ffffff22; background: #ffffff06; border-radius: 0 8px 8px 0; }
+.chron li small { display: block; color: var(--dim); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+.chron .k-war { border-color: #c8432f; }
+.chron .k-politics { border-color: #8d6bc4; }
+.chron .k-dynasty { border-color: #4b84c8; }
+.chron .k-trade { border-color: #c9a227; }
+.chron .k-title { border-color: #f0d48e; background: #f0d48e12; }
+
+/* ---------- HUD no modo feudo ---------- */
+.ico.ico-season { background: url('../assets/sprites/ui_res.webp') 100% 100% / 300% 200% no-repeat; }
+.ico.ico-food {
+  background:
+    radial-gradient(ellipse 18% 26% at 50% 22%, #f2cf6b 92%, transparent 100%),
+    radial-gradient(ellipse 18% 26% at 32% 42%, #e3b84f 92%, transparent 100%),
+    radial-gradient(ellipse 18% 26% at 68% 42%, #e3b84f 92%, transparent 100%),
+    radial-gradient(ellipse 18% 26% at 34% 64%, #d4a43c 92%, transparent 100%),
+    radial-gradient(ellipse 18% 26% at 66% 64%, #d4a43c 92%, transparent 100%),
+    linear-gradient(90deg, transparent 47%, #9c7a2a 47% 53%, transparent 53%) 0 60% / 100% 40% no-repeat;
+}
+.hud .tb.feudo { position: relative; }
+.hud .tb .badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: #c8432f;
+  color: #fff;
+  font: 700 11px/18px system-ui;
+  font-style: normal;
+}
+.hud .tb.alarm { border-color: #e0503a; animation: tbalarm 0.9s ease-in-out infinite alternate; }
+@keyframes tbalarm { to { box-shadow: 0 0 0 4px #e0503a55; } }
+.hud-top .r-season b { font-size: 11px; color: var(--gold); white-space: nowrap; }
+
+/* ---------- Fundar a casa (tela inicial) ---------- */
+.dyn .dyn-grid { display: grid; grid-template-columns: 150px 1fr; gap: 16px; align-items: center; margin: 12px 0; }
+.dyn .dyn-crest { display: grid; place-items: center; }
+.dyn .dyn-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dyn .dyn-sw { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0; }
+.dyn .dyn-sw span { width: 52px; font: 11px system-ui; color: var(--muted); }
+.dyn .swatch { width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 2px solid #ffffff33; box-shadow: none; }
+.dyn .swatch.on { border-color: var(--gold-hi); scale: 1.15; }
+.dyn .menu-actions { display: flex; gap: 10px; margin-top: 14px; }
+.dyn .menu-actions .primary { flex: 1; }
+@media (max-width: 620px) {
+  .dyn .dyn-grid { grid-template-columns: 1fr; }
+  .dyn .dyn-fields { grid-template-columns: 1fr 1fr; }
+  .crest.huge { width: 96px; height: 114px; font-size: 50px; }
+  .realm-body { padding: 10px; }
+  .realm .prov span { max-width: 70px; font-size: 9px; }
+  .realm .prov .crest { width: 26px; height: 31px; font-size: 14px; }
+  .obar { grid-template-columns: 78px 1fr 30px; }
+}
+
+.hud .quest {
+  position: absolute;
+  top: calc(var(--gap) + 48px);
+  left: calc(var(--gap) + var(--btn) + 10px);
+  padding: 4px 12px;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  background: var(--glass);
+  box-shadow: none;
+  color: var(--gold);
+  font: 600 11px/16px system-ui, sans-serif;
+}
+.hud .quest:empty { display: none; }
+@media (max-width: 620px), (pointer: coarse) and (max-width: 900px) {
+  .feudo-mode .hud-top .r-upkeep,
+  .feudo-mode .hud-top .r-season { display: none; }
+  .hud .quest { top: calc(var(--gap) + 40px); font-size: 10px; padding: 3px 10px; }
+}

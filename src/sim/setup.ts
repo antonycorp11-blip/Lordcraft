@@ -1,9 +1,12 @@
-import { FACTIONS, UNITS } from '../data/factions';
+import { BUILDINGS, FACTIONS, UNITS } from '../data/factions';
 import type { FactionId } from '../data/types';
 import { Rng } from '../core/rng';
 import { MAPS, generateMap } from '../world/mapgen';
 import { Game, type GameSetupPlayer } from './game';
-import { NEUTRAL_HOSTILE, NEUTRAL_PASSIVE, Player } from './entity';
+import { NEUTRAL_HOSTILE, NEUTRAL_PASSIVE, PLAYER_COLORS, Player, type Entity } from './entity';
+import { createRealm, type DynastyOptions } from '../realm/create';
+import { RAIDER, defenderStrength, unitPower } from '../realm/war';
+import type { Army, ArmyUnit, Realm } from '../realm/types';
 import { AIController, type Difficulty, type Personality } from '../ai/ai';
 
 export interface MatchConfig {
@@ -96,4 +99,117 @@ export function createGame(cfg: MatchConfig): { game: Game; ais: AIController[] 
   g.ais = ais;
   void UNITS;
   return { game: g, ais };
+}
+
+// ---------------------------------------------------------------------------
+// Modo feudo: a província do jogador (sem rivais no mapa) e batalhas comandadas
+// ---------------------------------------------------------------------------
+
+export function createCampaign(o: DynastyOptions & { faction: FactionId }): { game: Game; ais: AIController[] } {
+  const tpl = MAPS[0];
+  const { game: g, ais } = createGame({
+    mapId: tpl.id, seed: tpl.seed,
+    players: [{ name: `Casa ${o.houseName}`, faction: o.faction, color: PLAYER_COLORS[0], ai: false, team: 1, start: 0 }],
+  });
+  addRaider(g);
+  g.mode = 'province';
+  g.realm = createRealm(o);
+  return { game: g, ais };
+}
+
+/** Jogador reservado para tropas invasoras das casas (fica sem edifícios). */
+export function addRaider(g: Game) {
+  const raider = new Player(RAIDER, 'Invasores', PLAYER_COLORS[1], 'valmir', true, 9);
+  raider.raider = true;
+  raider.res = { silver: 0, wood: 0, aether: 0 };
+  g.addPlayer(raider);
+  g.initRelations();
+  g.updateFog(RAIDER);
+}
+
+function silentRemove(g: Game, e: Entity) {
+  if (e.kind === 'building') g.world.setBuilding(e.tx, e.ty, e.size, e.id, false);
+  if (e.inside) g.releaseFromMine(e);
+  e.alive = false;
+  e.dying = 0;
+  g.removeEntity(e);
+}
+
+function freeArea(g: Game, tx: number, ty: number, size: number): boolean {
+  for (let y = ty - 1; y <= ty + size; y++)
+    for (let x = tx - 1; x <= tx + size; x++) if (!g.world.inside(x, y) || !g.world.free(x, y)) return false;
+  return true;
+}
+
+function placeNear(g: Game, type: string, owner: number, cx: number, cy: number, rMin: number, rMax: number): boolean {
+  const size = BUILDINGS[type].size;
+  for (let k = 0; k < 80; k++) {
+    const a = g.rng.next() * Math.PI * 2, d = rMin + g.rng.next() * (rMax - rMin);
+    const tx = Math.round(cx + Math.cos(a) * d - size / 2), ty = Math.round(cy + Math.sin(a) * d - size / 2);
+    if (freeArea(g, tx, ty, size)) { g.placeBuilding(type, owner, tx, ty, true); return true; }
+  }
+  return false;
+}
+
+/** Batalha no mapa da província atacada: o exército do jogador contra a fortaleza da casa. */
+export function createBattle(r: Realm, a: Army, faction: FactionId): { game: Game; ais: AIController[] } {
+  const prov = r.provinces[a.target];
+  const h = r.houses[prov.owner];
+  const tpl = MAPS.find((m) => m.id === prov.mapId) ?? MAPS[2];
+  const { game: g, ais } = createGame({
+    mapId: tpl.id, seed: tpl.seed,
+    players: [
+      { name: `Casa ${r.houses[r.player].name}`, faction, color: PLAYER_COLORS[0], ai: false, team: 1, start: 0 },
+      { name: `Casa ${h.name}`, faction: 'valmir', color: PLAYER_COLORS[1], ai: true, team: 2, start: 1, personality: 'defensiva', difficulty: 'normal' },
+    ],
+  });
+  g.mode = 'battle';
+  g.battle = { army: a.id, province: prov.id, house: h.id };
+  const me = g.players[0], foe = g.players[1];
+  // o atacante chega só com o exército
+  for (const e of [...g.buildings, ...g.units]) if (e.owner === 0) silentRemove(g, e);
+  me.res = { silver: 0, wood: 0, aether: 0 };
+  a.units.forEach((u, i) => {
+    const e = g.spawnUnit(u.type, 0, me.startX + (i % 6) - 2.5, me.startY + Math.floor(i / 6) - 1);
+    if (u.hero) {
+      e.level = u.hero.level; e.xp = u.hero.xp; e.skills = { ...u.hero.skills }; e.items = [...u.hero.items]; e.skillPts = u.hero.skillPts;
+      e.personId = u.hero.person ?? 0;
+      g.refreshUnit(e);
+    }
+    e.hp = e.maxHp * Math.max(0.2, Math.min(1, u.hp ?? 1));
+  });
+  // defesa: casas, quartel, torres e guarnição conforme a força da casa
+  const hall = g.buildings.find((b) => b.owner === 1 && b.alive)!;
+  const str = defenderStrength(r, h);
+  placeNear(g, 'v_quartel', 1, hall.cx, hall.cy, 6, 9);
+  for (let i = 0; i < 2 + Math.min(3, Math.floor(str / 700)); i++) placeNear(g, 'v_casa', 1, hall.cx, hall.cy, 5, 10);
+  for (let i = 0; i < 1 + Math.min(3, Math.floor(str / 600)); i++) placeNear(g, 'v_torre', 1, hall.cx, hall.cy, 5, 8);
+  let pw = str * 0.7;
+  const mix: [string, number][] = [['v_lanceiro', 0.5], ['v_besteiro', 0.35], ['v_cavaleiro', 0.15]];
+  let n = 0;
+  while (pw > 40 && n < 24) {
+    let k = g.rng.next(), type = mix[0][0];
+    for (const [t, w] of mix) { if (k < w) { type = t; break; } k -= w; }
+    const ang = (n / 8) * Math.PI * 2;
+    g.spawnUnit(type, 1, hall.cx + Math.cos(ang) * 4.5, hall.cy + Math.sin(ang) * 4.5);
+    pw -= unitPower(type);
+    n++;
+  }
+  foe.res = { silver: Math.round(200 + Math.max(0, h.treasury) * 0.2), wood: 200, aether: 0 };
+  g.recomputeSupply();
+  for (const p of g.players) g.updateFog(p.id);
+  return { game: g, ais };
+}
+
+/** Sobreviventes do jogador numa batalha (heróis caídos voltam feridos). */
+export function battleSurvivors(g: Game): ArmyUnit[] {
+  const out: ArmyUnit[] = [];
+  for (const u of g.units) {
+    if (!u.alive || u.owner !== 0) continue;
+    const a: ArmyUnit = { type: u.type, hp: u.hp / u.maxHp };
+    if (u.isHero) a.hero = { level: u.level, xp: u.xp, skills: { ...u.skills }, items: [...u.items], skillPts: u.skillPts, person: u.personId || undefined };
+    out.push(a);
+  }
+  for (const [, rec] of g.heroRecords) if (rec.owner === 0) out.push({ type: rec.type, hp: 0.25, hero: { level: rec.level, xp: rec.xp, skills: rec.skills, items: rec.items, skillPts: rec.skillPts } });
+  return out;
 }

@@ -4,6 +4,7 @@ import type { Game } from './game';
 import { buildingAttack } from './combat';
 import { setOrder, depleteResource } from './units';
 import { autoLearn } from './heroes';
+import { swearHero } from '../realm/dynasty';
 
 export function updateBuilding(g: Game, b: Entity, dt: number) {
   const d = b.bdef!;
@@ -81,6 +82,8 @@ function completeItem(g: Game, b: Entity, q: Entity['bqueue'][number]) {
       if (rec) {
         u.level = rec.level; u.xp = rec.xp; u.skills = { ...rec.skills }; u.items = [...rec.items]; u.skillPts = rec.skillPts;
         g.heroRecords.delete(q.heroId);
+        const realm = g.realm;
+        if (realm && b.owner === 0) u.personId = Object.values(realm.persons).find((x) => x.alive && x.house === realm.player && x.heroType === u.type)?.id ?? 0;
         g.refreshUnit(u);
         u.hp = u.maxHp; u.mana = u.maxMana;
       }
@@ -90,7 +93,11 @@ function completeItem(g: Game, b: Entity, q: Entity['bqueue'][number]) {
       p.stats.trained++;
       if (u.isHero) {
         if (p.ai) autoLearn(u);
-        g.alert(b.owner, x, y, `${u.udef!.name} juntou-se ao seu reino!`, 'hero');
+        if (g.realm && b.owner === 0) {
+          const person = swearHero(g.realm, u.type, u.udef!.hero?.title ?? 'herói');
+          u.personId = person.id;
+          g.alert(b.owner, x, y, `${person.name}, ${u.udef!.name}, jurou lealdade à sua casa!`, 'hero');
+        } else g.alert(b.owner, x, y, `${u.udef!.name} juntou-se ao seu reino!`, 'hero');
       }
     }
     g.emit('summon', u.x, u.y);

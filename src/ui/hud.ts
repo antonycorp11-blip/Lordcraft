@@ -12,6 +12,7 @@ import { canLearn, XP_TABLE } from '../sim/heroes';
 import { getArmor, getRange, getSpeed, skillLevel } from '../sim/stats';
 import { portraitHTML } from '../render/views';
 import { icon } from './icons';
+import { realmHudInfo } from './realm-ui';
 import type { Session } from './session';
 import type { Input } from './input';
 import { selected, ownSelected, setSelection, selectByClass, selectIdleWorker, centerOnSelection } from './selection';
@@ -66,15 +67,20 @@ export class Hud {
           <span class="r r-aether" title="Éter — energia rara">${icon('aether')}<b data-k="aether">0</b></span>
           <span class="r r-supply" title="Abastecimento (casas ampliam sem limite fixo)">${icon('supply')}<b data-k="supply">0/0</b></span>
           <span class="r r-upkeep" title="Soldo: exércitos acima de 30 de abastecimento consomem prata">${icon('upkeep')}<b data-k="upkeep">0</b></span>
+          ${s.g.realm ? `<span class="r r-pop" title="População civil / moradias. Cada recruta sai daqui.">${icon('house')}<b data-k="pop">0</b></span>
+          <span class="r r-food" title="Grãos estocados (variação por minuto)">${icon('food')}<b data-k="food">0</b></span>
+          <span class="r r-season" title="Estação e ano">${icon('season')}<b data-k="season"></b></span>` : ''}
         </div>
         <div class="clock"><i class="sun"></i><b class="time">00:00</b></div>
       </div>
       <div class="topbtns">
-          <button class="tb" data-a="diplo" title="Diplomacia">${icon('diplo')}<span>Diplomacia</span></button>
+          ${s.g.realm ? `<button class="tb feudo" data-a="feudo" title="Feudo: casas, cartas, mercado, exército e dinastia">${icon('diplo')}<span>Feudo</span><em class="badge" hidden></em></button>`
+            : s.g.mode === 'battle' ? '' : `<button class="tb" data-a="diplo" title="Diplomacia">${icon('diplo')}<span>Diplomacia</span></button>`}
           <button class="tb" data-a="speed" title="Velocidade da partida"><span class="spd">1×</span></button>
           <button class="tb" data-a="pause" title="Pausar (Pause)">${icon('pause')}</button>
           <button class="tb" data-a="menu" title="Menu (F10)">${icon('menu')}<span>Menu</span></button>
       </div>
+      ${s.g.realm ? '<button class="quest" data-a="quest" title="Próximo título"></button>' : ''}
       <div class="toasts"></div>
       <div class="msgs"></div>
       <div class="side">
@@ -112,6 +118,13 @@ export class Hud {
     for (const k of RES_KEYS) this.el['r_' + k] = q(`[data-k="${k}"]`);
     this.el.r_supply = q('[data-k="supply"]');
     this.el.r_upkeep = q('[data-k="upkeep"]');
+    if (s.g.realm) {
+      this.el.r_pop = q('[data-k="pop"]'); this.el.r_food = q('[data-k="food"]'); this.el.r_season = q('[data-k="season"]');
+      this.el.badge = q('.tb.feudo .badge');
+      this.el.quest = q('.quest');
+      this.el.quest.onclick = () => this.openRealm('governo');
+      root.classList.add('feudo-mode');
+    }
     if (s.isTouch) root.classList.add('hide-mm');
     this.bind();
   }
@@ -122,6 +135,7 @@ export class Hud {
       const a = (e.target as HTMLElement).closest('button')?.dataset.a;
       if (a === 'menu') this.openMenu();
       if (a === 'diplo') this.openDiplomacy();
+      if (a === 'feudo') this.openRealm();
       if (a === 'pause') { s.paused = !s.paused; s.dirty = true; }
       if (a === 'speed') { const sp = [1, 1.5, 2, 3, 0.5]; s.speed = sp[(sp.indexOf(s.speed) + 1) % sp.length]; this.el.spd.textContent = s.speed + '×'; }
     });
@@ -284,6 +298,22 @@ export class Hud {
     setText(this.el.r_supply, `${p.supplyUsed}/${p.supplyCap}`);
     this.el.r_supply.parentElement!.classList.toggle('warn', p.supplyUsed >= p.supplyCap);
     setText(this.el.r_upkeep, p.upkeep > 0 ? `-${Math.round(p.upkeep)}/min` : '0');
+    if (g.realm && this.el.r_pop) {
+      const ri = realmHudInfo(g.realm, g);
+      setText(this.el.r_pop, `${ri.pop}/${ri.housing}`);
+      this.el.r_pop.parentElement!.classList.toggle('warn', ri.pop < 1);
+      setText(this.el.r_food, `${fmt(ri.food)} ${ri.foodDay >= 0 ? '+' : ''}${Math.round(ri.foodDay * 12)}`);
+      this.el.r_food.parentElement!.classList.toggle('warn', ri.foodDay < 0 && ri.food < 60);
+      setText(this.el.r_season, ri.season);
+      setText(this.el.r_upkeep, ri.wages > 0 ? `-${Math.round(ri.wages)}/min` : '0');
+      this.el.r_upkeep.parentElement!.classList.toggle('on', ri.wages > 0);
+      this.el.r_upkeep.parentElement!.title = 'Salários de trabalhadores e soldados (prata por minuto)';
+      setText(this.el.quest, ri.quest);
+      setText(this.el.badge, ri.unread ? String(ri.unread) : '');
+      this.el.badge.hidden = !ri.unread;
+      this.el.badge.parentElement!.classList.toggle('alarm', ri.danger);
+      this.onRealmTick();
+    }
     this.el.r_upkeep.parentElement!.classList.toggle('warn', p.debt > 0);
     this.el.r_upkeep.parentElement!.classList.toggle('on', p.upkeep > 0);
     const tm = Math.floor(g.time);
@@ -319,7 +349,7 @@ export class Hud {
       while (this.el.msgs.children.length > 6) this.el.msgs.firstElementChild?.remove();
     }
     // propostas de diplomacia recebidas
-    if (g.proposals.some((x) => x.to === s.pid) && !this.root.querySelector('.modal.open')) this.openDiplomacy();
+    if (!g.realm && g.proposals.some((x) => x.to === s.pid) && !this.root.querySelector('.modal.open')) this.openDiplomacy();
 
     if (now - this.lastFull < 120 && !s.dirty) return;
     this.lastFull = now;
@@ -426,7 +456,9 @@ export class Hud {
       const ord = e.order ? orderText(e) : e.targetId ? 'Combatendo' : 'Aguardando ordens';
       const buffs = e.buffs.filter((b) => !b.id.startsWith('a_') || b.armor || b.dmgMul || b.atkMul || b.regen).map((b) => `<i class="bf" title="${buffName(b.id)}">${buffName(b.id)}</i>`).join('');
       void stats; void ord; void buffs; // detalhes ficam fora do cartão compacto
-      return `<div class="single"><div class="por" style="--tc:${pc}">${portraitHTML(e.type, pc)}</div><div class="det"><h3>${d.name}${own ? '' : ` <small>${owner}</small>`}</h3>${hpLine}${hero}</div></div>`;
+      const person = e.personId && g.realm ? g.realm.persons[e.personId] : null;
+      const title = person ? `${person.name} <small>${d.hero?.title ?? d.name}</small>` : d.name;
+      return `<div class="single"><div class="por" style="--tc:${pc}">${portraitHTML(e.type, pc)}</div><div class="det"><h3>${title}${own ? '' : ` <small>${owner}</small>`}</h3>${hpLine}${hero}</div></div>`;
     }
     // edifício
     const d = e.bdef!;
@@ -681,6 +713,8 @@ export class Hud {
 
   openMenu: () => void = () => {};
   openDiplomacy: () => void = () => {};
+  openRealm: (tab?: 'governo') => void = () => {};
+  onRealmTick: () => void = () => {};
 }
 
 function setText(el: HTMLElement, t: string) {

@@ -15,6 +15,8 @@ import { updateProjectiles, type Projectile } from './combat';
 import { updateBuilding } from './buildings';
 import { updateAuras, processPending } from './abilities';
 import { grantXp } from './heroes';
+import type { Realm } from '../realm/types';
+import { realmSecond } from '../realm/tick';
 
 export type FxKind =
   | 'slash' | 'hit' | 'spark' | 'blood' | 'death' | 'explode' | 'bigexplode' | 'heal' | 'spell' | 'levelup' | 'build'
@@ -75,6 +77,11 @@ export class Game {
   over = false;
   winnerTeam = -1;
   ais: { update(g: Game): void; playerId: number }[] = [];
+  /** modo feudo: o mapa é a província do jogador e o reino corre por trás */
+  realm: Realm | null = null;
+  mode: 'skirmish' | 'province' | 'battle' = 'skirmish';
+  /** batalha comandada: exército do jogador (0) contra a casa defensora (1) */
+  battle: { army: number; province: string; house: string } | null = null;
   perf = { simMs: 0, aiMs: 0, fogMs: 0 };
   ghosts: Map<number, Map<number, { type: string; tx: number; ty: number; size: number; owner: number }>> = new Map();
   heroRecords = new Map<number, { owner: number; type: string; level: number; xp: number; skills: Record<string, number>; items: (string | null)[]; skillPts: number }>();
@@ -329,7 +336,7 @@ export class Game {
       for (const [, hr] of this.heroRecords) if (hr.owner === p.id) p.heroCount++;
       p.tier = Math.max(1, tier);
       // manutenção ("soldo"): exércitos acima de 30 de abastecimento custam prata
-      p.upkeep = Math.max(0, mil - 30) * 0.7;
+      p.upkeep = this.mode === 'skirmish' ? Math.max(0, mil - 30) * 0.7 : 0; // no feudo os soldos são diários
     }
   }
 
@@ -525,7 +532,7 @@ export class Game {
     processPending(this);
     if (this.tick % 10 === 0) updateAuras(this);
     if (this.tick % 10 === 5) this.recomputeSupply();
-    if (this.tick % 20 === 0) this.economyTick();
+    if (this.tick % 20 === 0) { this.economyTick(); if (this.realm) realmSecond(this); }
 
     // pickups (baús)
     if (this.tick % 4 === 0) this.updatePickups();
@@ -605,6 +612,19 @@ export class Game {
   }
 
   checkVictory() {
+    if (this.mode === 'province') {
+      // a província só se perde quando não resta nenhum edifício
+      const p = this.players[0];
+      if (!p.defeated && !this.buildings.some((b) => b.owner === 0 && b.alive)) { p.defeated = true; this.over = true; }
+      return;
+    }
+    if (this.mode === 'battle') {
+      const att = this.units.some((u) => u.owner === 0 && u.alive);
+      const hall = this.buildings.some((b) => b.owner === 1 && b.alive && b.bdef!.cat === 'hall');
+      if (!att) { this.players[0].defeated = true; this.over = true; this.winnerTeam = 1; }
+      else if (!hall) { this.players[1].defeated = true; this.over = true; this.winnerTeam = 0; }
+      return;
+    }
     for (const p of this.players) {
       if (!p || p.defeated) continue;
       const hasB = this.buildings.some((b) => b.owner === p.id && b.alive);
