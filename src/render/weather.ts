@@ -75,7 +75,7 @@ export class Weather {
   }
 
   private resize() {
-    const w = this.root.clientWidth, h = this.root.clientHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = this.root.clientWidth, h = this.root.clientHeight, dpr = 1; // gotas finas não precisam de retina; 4x menos pixels para limpar a cada quadro
     if (w === this.w && h === this.h && dpr === this.dpr) return;
     this.w = w; this.h = h; this.dpr = dpr;
     this.canvas.width = Math.round(w * dpr);
@@ -104,7 +104,7 @@ export class Weather {
       d.y += d.vy * dt;
       d.x += d.vy * dt * WIND;
       if (d.y >= d.groundY) {
-        if (this.splashes.length < 220) this.splashes.push({ x: d.x, y: d.groundY, t: 0 });
+        if (this.splashes.length < 90) this.splashes.push({ x: d.x, y: d.groundY, t: 0 });
         if (this.drops.length > want) this.drops.splice(i, 1);
         else this.drops[i] = this.spawn(true);
       }
@@ -119,23 +119,27 @@ export class Weather {
     const c = this.ctx, dpr = this.dpr;
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.clearRect(0, 0, this.w, this.h);
-    c.lineCap = 'round';
     c.lineWidth = 1.1;
-    for (const d of this.drops) {
-      c.strokeStyle = `rgba(206,222,236,${d.a})`;
+    // três lotes de transparência: 3 traços por quadro em vez de um por gota
+    for (let k = 0; k < 3; k++) {
+      c.strokeStyle = `rgba(206,222,236,${0.2 + k * 0.1})`;
       c.beginPath();
-      c.moveTo(d.x, d.y);
-      c.lineTo(d.x - d.len * WIND, d.y - d.len);
+      for (let i = k; i < this.drops.length; i += 3) {
+        const d = this.drops[i];
+        c.moveTo(d.x, d.y);
+        c.lineTo(d.x - d.len * WIND, d.y - d.len);
+      }
       c.stroke();
     }
     c.lineWidth = 1;
+    c.strokeStyle = 'rgba(214,228,238,0.3)';
+    c.beginPath();
     for (const s of this.splashes) {
       const p = s.t / 0.28;
-      c.strokeStyle = `rgba(214,228,238,${0.45 * (1 - p)})`;
-      c.beginPath();
+      c.moveTo(s.x + 2 + p * 6, s.y);
       c.ellipse(s.x, s.y, 2 + p * 6, 1 + p * 2.2, 0, 0, Math.PI * 2);
-      c.stroke();
     }
+    c.stroke();
     this.drawn = true;
   }
 }

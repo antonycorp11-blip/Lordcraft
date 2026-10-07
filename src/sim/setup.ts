@@ -114,6 +114,9 @@ export function createCampaign(o: DynastyOptions & { faction: FactionId }): { ga
   addRaider(g);
   g.mode = 'province';
   g.realm = createRealm(o);
+  // a província é sua terra: o mapa todo aparece desde o início
+  g.fogs[0].revealAll = true;
+  g.updateFog(0);
   return { game: g, ais };
 }
 

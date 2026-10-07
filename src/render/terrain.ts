@@ -91,7 +91,7 @@ export class TerrainView {
     const target = Math.min(1.25, zoom * Math.min(2, window.devicePixelRatio || 1));
     const want = PAINT_STEPS.find((p) => p >= target) ?? 1.25;
     let budget = 3; // limita construções por quadro (fluidez da câmera)
-    let paintBudget = 2;
+    let paintBudget = 1; // um bloco de chão por quadro: pintar dois de uma vez dava trancos no celular
     for (const c of this.chunks) {
       const vis = c.cx >= c0 && c.cx <= c1 && c.cy >= r0 && c.cy <= r1;
       if (vis && !c.built) {
@@ -116,7 +116,7 @@ export class TerrainView {
     }
     // Prepara com antecedência o anel de blocos em volta da tela (1 por quadro, só quando
     // os visíveis já estão prontos): ao mover a câmera, eles não precisam ser montados na hora.
-    if (budget === 3 && paintBudget === 2) {
+    if (budget === 3 && paintBudget === 1) {
       for (let cy = r0 - 1; cy <= r1 + 1; cy++)
         for (let cx = c0 - 1; cx <= c1 + 1; cx++) {
           if (cx < 0 || cy < 0 || cx >= this.cols || cy >= this.rows) continue;

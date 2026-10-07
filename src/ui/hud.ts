@@ -51,6 +51,7 @@ export class Hud {
   private sig = '';
   private infoSig = '';
   private lastFull = 0;
+  private lastRealm = -1e9;
   private alertSeen = new WeakSet<object>();
   private msgSeen = new WeakSet<object>();
   private toastTimer = 0;
@@ -298,7 +299,8 @@ export class Hud {
     setText(this.el.r_supply, `${p.supplyUsed}/${p.supplyCap}`);
     this.el.r_supply.parentElement!.classList.toggle('warn', p.supplyUsed >= p.supplyCap);
     setText(this.el.r_upkeep, p.upkeep > 0 ? `-${Math.round(p.upkeep)}/min` : '0');
-    if (g.realm && this.el.r_pop) {
+    if (g.realm && this.el.r_pop && now - this.lastRealm >= 500) {
+      this.lastRealm = now;
       const ri = realmHudInfo(g.realm, g);
       setText(this.el.r_pop, `${ri.pop}/${ri.housing}`);
       this.el.r_pop.parentElement!.classList.toggle('warn', ri.pop < 1);

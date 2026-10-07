@@ -21,3 +21,11 @@
 .far .tr{filter:none}
 /* .gtex: textura de solo definida em sprites.css */
 .chunk.g .gcv{position:absolute;pointer-events:none}
+
+/* Desempenho: soldados e quadros animados de prédios/jazidas em camadas próprias da GPU.
+   Sem isso, cada passo de um soldado obrigava o navegador a repintar as árvores e prédios
+   em volta (todos dividem a mesma camada), o que travava no celular. */
+.objs .u,
+.objs .atl {
+  will-change: transform;
+}

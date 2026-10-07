@@ -23,7 +23,7 @@ export function buildingFrame(b: BuildingLook, now: number): number {
   if (b.hpRatio < 0.3) return 5;
   if (b.hpRatio < 0.6) return 4;
   if (b.night) return 3;
-  return 8 + (Math.floor(now / 1000 * 6 + b.id * 0.37) % 8); // 6 quadros por segundo, fora de fase entre prédios
+  return 8 + (Math.floor(now / 1000 * 4 + b.id * 0.37) % 8); // 4 quadros por segundo, fora de fase entre prédios
 }
 
 /** Mina/cristal: animação de brilho quando cheios; depois estágios de esgotamento. */

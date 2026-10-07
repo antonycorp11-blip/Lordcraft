@@ -67,6 +67,8 @@ function autoQuality(): string {
     const renderer = info ? String(gl!.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
     const software = !gl || /swiftshader|llvmpipe|software/i.test(renderer);
     if (software) return 'baixa';
+    // celulares e tablets: média (árvores paradas, menos chuva) — a tela é pequena e a bateria agradece
+    if (matchMedia('(pointer: coarse)').matches) return 'media';
     return (navigator.hardwareConcurrency || 4) <= 4 ? 'media' : 'alta';
   } catch { return 'media'; }
 }
@@ -204,6 +206,7 @@ function launch({game:g,ais}: Bundle, opts: { home?: Bundle; armyId?: number } =
   app.className='playing';
   app.innerHTML='<div class="viewport" aria-label="Campo de batalha"></div><div class="hud"></div><pre class="diagnostics" hidden></pre><div class="pause-sign" hidden>PARTIDA PAUSADA</div>';
   const vp=app.querySelector<HTMLElement>('.viewport')!, hudRoot=app.querySelector<HTMLElement>('.hud')!;
+  if(g.mode==='province'&&!g.fogs[0].revealAll){g.fogs[0].revealAll=true;g.updateFog(0);} // salvamentos antigos do feudo
   const r=new Renderer(g,vp,0);
   const s:Session={g,r,mm:null!,ais,pid:0,selection:[],groups:Array.from({length:10},()=>[]),mode:{k:'none'},formation:'block',speed:1,paused:false,quality,isTouch:matchMedia('(pointer: coarse)').matches,touchSelectMode:false,quickOrders:true,subgroup:'',lastAlert:null,dirty:true,onExit:frontPage};
   app.classList.toggle('touch',s.isTouch);

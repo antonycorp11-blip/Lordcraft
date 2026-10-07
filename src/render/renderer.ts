@@ -124,7 +124,6 @@ export class Renderer {
     this.world.style.width = g.world.w * TILE + 'px';
     this.world.style.height = g.world.h * TILE + 'px';
     this.ground = mk('layer ground', this.world);
-    mk('layer gtex', this.world);
     this.decals = mk('layer decals', this.world);
     this.objs = mk('layer objs', this.world);
     this.nightEl = mk('layer night', this.world);
@@ -154,7 +153,7 @@ export class Renderer {
     this.root.classList.toggle('q-high', q === 'alta');
     this.root.classList.toggle('q-noshadow', !this.quality.shadows);
     this.root.classList.toggle('q-nowater', !this.quality.water);
-    this.weather.maxDrops = q === 'baixa' ? 180 : q === 'media' ? 380 : 650;
+    this.weather.maxDrops = q === 'baixa' ? 90 : q === 'media' ? 200 : 380;
   }
 
   // ------------------------------------------------------------------
@@ -177,6 +176,9 @@ export class Renderer {
       this.lastDark = dark;
       this.nightEl.style.opacity = (dark * 0.62).toFixed(3);
       this.lights.style.opacity = dark.toFixed(3);
+      // camadas do tamanho do mapa inteiro: fora da noite, nem entram na composição
+      const off = dark < 0.01 ? 'none' : '';
+      if (this.nightEl.style.display !== off) { this.nightEl.style.display = off; this.lights.style.display = off; }
       this.root.classList.toggle('night', dark > 0.45);
     }
 
@@ -617,6 +619,9 @@ export class Renderer {
     const fog = this.g.fogs[this.pid];
     if (fog.version === this.fogVer) return;
     this.fogVer = fog.version;
+    // mapa todo revelado: nada a desenhar, e uma camada a menos para a GPU compor
+    this.fogCanvas.style.display = fog.revealAll ? 'none' : '';
+    if (fog.revealAll) return;
     const px = this.fogImg.data, n = fog.vis.length;
     for (let i = 0, j = 0; i < n; i++, j += 4) {
       if (!fog.seen[i]) { px[j] = 12; px[j + 1] = 21; px[j + 2] = 23; px[j + 3] = 255; }      // inexplorado
