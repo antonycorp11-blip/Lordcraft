@@ -23,7 +23,7 @@ it('celular: Construir → Casa → posicionar → confirmar, sem travar nem pau
   (root.querySelector('.sb.build') as HTMLElement).click(); hud.update(16);
   expect(root.classList.contains('bmenu')).toBe(true);
   expect(root.querySelector('[data-id="b:v_casa"] .bimg')!.getAttribute('style')).toContain('background-image');
-  (root.querySelector('[data-id="b:v_casa"]') as HTMLElement).click(); hud.update(32);
+  (root.querySelector('[data-id="b:v_casa"]') as HTMLElement).click(); hud.update(200);
   expect(s.mode.k).toBe('build');
   expect(root.classList.contains('bmenu')).toBe(false); // saiu do menu de cartões ao escolher
   for (let i = 0; i < 5; i++) { r.render(0.5, 100 + i * 16); hud.update(100 + i * 16); input.update(0.016, false); }
