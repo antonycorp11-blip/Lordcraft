@@ -7,7 +7,7 @@ import './styles/sprites.css';
 import './styles/hud.css';
 import './styles/front.css';
 import './styles/atlas.css';
-import { FACTIONS, FACTION_IDS } from './data/factions';
+import { FACTIONS, FACTION_IDS, FACTION_SHOWCASE, UNITS, BUILDINGS } from './data/factions';
 import { MAPS } from './world/mapgen';
 import { PLAYER_COLORS } from './sim/entity';
 import { createGame, type MatchConfig } from './sim/setup';
@@ -22,12 +22,36 @@ import type { Session } from './ui/session';
 import { setSelection } from './ui/selection';
 import { propose, respond, declareWar } from './sim/diplomacy';
 import type { FactionId } from './data/types';
+import valmirArt from './assets/factions/valmir.webp';
+import valmirCrest from './assets/factions/valmir-crest.webp';
+import valmirLand from './assets/factions/valmir-land.webp';
+import veymarArt from './assets/factions/veymar.webp';
+import veymarCrest from './assets/factions/veymar-crest.webp';
+import veymarLand from './assets/factions/veymar-land.webp';
+import durnArt from './assets/factions/durn.webp';
+import durnCrest from './assets/factions/durn-crest.webp';
+import durnLand from './assets/factions/durn-land.webp';
+import kraggArt from './assets/factions/kragg.webp';
+import kraggCrest from './assets/factions/kragg-crest.webp';
+import kraggLand from './assets/factions/kragg-land.webp';
+import salinosArt from './assets/factions/salinos.webp';
+import salinosCrest from './assets/factions/salinos-crest.webp';
+import salinosLand from './assets/factions/salinos-land.webp';
+
 
 const app = document.querySelector<HTMLElement>('#app')!;
 const esc = (s: string) => s.replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]!));
 let dispose: (() => void) | undefined;
 let faction: FactionId = 'valmir';
 let mapId = 'vale';
+const FACTION_ART: Record<FactionId, { art: string; crest: string; land: string }> = {
+  valmir: { art: valmirArt, crest: valmirCrest, land: valmirLand },
+  veymar: { art: veymarArt, crest: veymarCrest, land: veymarLand },
+  durn: { art: durnArt, crest: durnCrest, land: durnLand },
+  kragg: { art: kraggArt, crest: kraggCrest, land: kraggLand },
+  salinos: { art: salinosArt, crest: salinosCrest, land: salinosLand },
+};
+
 // Qualidade inicial pelo aparelho: sem aceleração de vídeo ou com poucos núcleos começa
 // em "média" (sem árvores balançando, menos chuva). O jogador pode mudar no menu.
 function autoQuality(): string {
@@ -45,21 +69,38 @@ const options = (entries: [string, string][], value = '') => entries.map(([k, v]
 
 function frontPage() {
   dispose?.(); dispose = undefined;
-  app.className = 'front';
-  app.innerHTML = `<div class="front-sky"></div><div class="mountains back"></div><div class="mountains near"></div>
-    <div class="front-scene" aria-hidden="true"><div class="${buildingClass(FACTIONS[faction].hall)}">${buildingHTML(FACTIONS[faction].hall)}</div><i class="tr k0"></i><i class="tr k1"></i></div>
-    <header class="brand"><span class="eyebrow">CRÔNICAS DE UM MUNDO PARTIDO</span><h1><small>REINOS DE</small>ALDARIS</h1><p>Erga seu reino. Escreva sua conquista.</p></header>
-    <main class="setup frame"><div class="setup-heading"><div><span class="eyebrow">CONFRONTO</span><h2>Escolha seu povo</h2></div><span class="version">VERSÃO EM DESENVOLVIMENTO</span></div>
-    <div class="faction-grid">${FACTION_IDS.map((id, i) => `<button class="faction ${id === faction ? 'chosen' : ''}" data-faction="${id}" aria-pressed="${id === faction}"><div class="faction-art">${portraitHTML(FACTIONS[id].hero, PLAYER_COLORS[i])}</div><span>${FACTIONS[id].name}</span><small>${FACTIONS[id].people}</small></button>`).join('')}</div>
-    <div class="faction-detail"><p class="lore">${FACTIONS[faction].desc}</p><div class="traits">${FACTIONS[faction].traits.map(t => `<span>${t}</span>`).join('')}</div></div>
-    <div class="match-fields"><label>Campo de batalha<select id="map">${options(MAPS.map(m => [m.id, m.name]), mapId)}</select></label><label>Dificuldade<select id="difficulty">${options([['facil','Fácil'],['normal','Normal'],['dificil','Difícil']], 'normal')}</select></label><label>Qualidade visual<select id="quality">${options([['alta','Alta'],['media','Média'],['baixa','Baixa']], quality)}</select></label></div>
-    <p class="map-desc"></p><div class="roster"></div><p class="setup-error" role="alert"></p>
-    <footer class="setup-actions"><button id="load" ${listSaves().length ? '' : 'disabled'}>Continuar partida</button><button id="guide">Como jogar</button><button class="primary" id="start">Iniciar conquista <span>→</span></button></footer>
-    </main><div class="front-foot">ESTRATÉGIA EM TEMPO REAL <span>•</span> CINCO POVOS, UM CONTINENTE</div><div class="front-modal"></div>`;
+  app.className = 'lobby';
+  const f = FACTIONS[faction];
+  const show = FACTION_SHOWCASE[faction];
+  const names = (ids: string[]) => ids.map(id => `<li>${esc(UNITS[id]?.name ?? BUILDINGS[id]?.name ?? id)}</li>`).join('');
+  app.innerHTML = `<div class="lobby-bg" style="--land:url('${FACTION_ART[faction].land}')"></div>
+    <header class="lobby-brand"><h1>LORDCRAFT</h1><p>Construa uma dinastia. Conquiste do seu jeito.</p></header>
+    <main class="lobby-main">
+      <nav class="lobby-crests" aria-label="Escolha seu povo">${FACTION_IDS.map(id => `<button class="lobby-crest ${id === faction ? 'on' : ''}" data-faction="${id}" aria-pressed="${id === faction}" style="--crest:url('${FACTION_ART[id].crest}')"><i></i><span>${esc(FACTIONS[id].name)}</span></button>`).join('')}</nav>
+      <section class="lobby-hero f-${faction}">
+        <div class="lobby-art" style="--art:url('${FACTION_ART[faction].art}')"></div>
+        <div class="lobby-info">
+          <h2>${esc(f.name)}</h2>
+          <p class="lobby-motto">${esc(f.motto ?? '')}</p>
+          <p class="lobby-desc">${esc(f.desc)}</p>
+          <div class="lobby-lists"><div><h3>Unidades</h3><ul>${names(show.units)}</ul></div><div><h3>Construções</h3><ul>${names(show.buildings)}</ul></div></div>
+        </div>
+      </section>
+      <div class="lobby-actions">
+        <button class="primary lobby-play" id="start">Jogar</button>
+        <div class="lobby-row"><button id="load" ${listSaves().length ? '' : 'disabled'}>Continuar</button><button id="guide">Como jogar</button><button id="opts">Opções da partida</button></div>
+        <p class="setup-error" role="alert"></p>
+      </div>
+      <section class="lobby-opts" hidden>
+        <div class="match-fields"><label>Campo de batalha<select id="map">${options(MAPS.map(m => [m.id, m.name]), mapId)}</select></label><label>Dificuldade<select id="difficulty">${options([['facil','Fácil'],['normal','Normal'],['dificil','Difícil']], 'normal')}</select></label><label>Qualidade visual<select id="quality">${options([['alta','Alta'],['media','Média'],['baixa','Baixa']], quality)}</select></label></div>
+        <p class="map-desc"></p><div class="roster"></div>
+      </section>
+    </main><div class="front-modal"></div>`;
+  app.querySelector<HTMLButtonElement>('#opts')!.onclick = () => { const o = app.querySelector<HTMLElement>('.lobby-opts')!; o.hidden = !o.hidden; };
   const fillRoster = () => {
     const map = MAPS.find(m => m.id === mapId)!;
     app.querySelector('.map-desc')!.textContent = map.desc;
-    app.querySelector('.roster')!.innerHTML = `<div class="roster-head"><span>Reinos</span><span>Povo</span><span>Aliança</span><span>Posição</span><span>Personalidade</span></div>` + Array.from({length:map.starts.length}, (_, i) => `<div class="roster-row" data-player="${i}"><span class="player-name"><i style="background:${PLAYER_COLORS[i]}"></i>${i === 0 ? 'Você' : 'Reino ' + (i+1)}</span><select class="rf" aria-label="Povo do reino ${i+1}" ${i===0?'disabled':''}>${options([...(i ? [['off','Desativado'] as [string,string]] : []), ...FACTION_IDS.map(id => [id,FACTIONS[id].name] as [string,string])], i ? FACTION_IDS[(FACTION_IDS.indexOf(faction)+i)%4] : faction)}</select><select class="rt" aria-label="Aliança do reino ${i+1}">${options(Array.from({length:4},(_,j)=>[String(j+1),'Aliança '+(j+1)]),String(i+1))}</select><select class="rs" aria-label="Posição do reino ${i+1}">${options([['random','Aleatória'], ...map.starts.map((_,j)=>[String(j),'Posição '+(j+1)] as [string,string])],String(i))}</select><select class="rp" aria-label="Personalidade do reino ${i+1}" ${i===0?'disabled':''}>${options(PERSONALITIES.map(p=>[p,PERSONALITY_NAMES[p]]), PERSONALITIES[i])}</select></div>`).join('');
+    app.querySelector('.roster')!.innerHTML = `<div class="roster-head"><span>Reinos</span><span>Povo</span><span>Aliança</span><span>Posição</span><span>Personalidade</span></div>` + Array.from({length:map.starts.length}, (_, i) => `<div class="roster-row" data-player="${i}"><span class="player-name"><i style="background:${PLAYER_COLORS[i]}"></i>${i === 0 ? 'Você' : 'Reino ' + (i+1)}</span><select class="rf" aria-label="Povo do reino ${i+1}" ${i===0?'disabled':''}>${options([...(i ? [['off','Desativado'] as [string,string]] : []), ...FACTION_IDS.map(id => [id,FACTIONS[id].name] as [string,string])], i ? FACTION_IDS[(FACTION_IDS.indexOf(faction)+i)%FACTION_IDS.length] : faction)}</select><select class="rt" aria-label="Aliança do reino ${i+1}">${options(Array.from({length:4},(_,j)=>[String(j+1),'Aliança '+(j+1)]),String(i+1))}</select><select class="rs" aria-label="Posição do reino ${i+1}">${options([['random','Aleatória'], ...map.starts.map((_,j)=>[String(j),'Posição '+(j+1)] as [string,string])],String(i))}</select><select class="rp" aria-label="Personalidade do reino ${i+1}" ${i===0?'disabled':''}>${options(PERSONALITIES.map(p=>[p,PERSONALITY_NAMES[p]]), PERSONALITIES[i])}</select></div>`).join('');
   };
   fillRoster();
   app.querySelectorAll<HTMLButtonElement>('[data-faction]').forEach(b => b.onclick = () => { faction = b.dataset.faction as FactionId; frontPage(); });

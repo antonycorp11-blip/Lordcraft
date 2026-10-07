@@ -1,9 +1,232 @@
-/* Tela inicial: arte das cinco facções (recortes da referência em src/assets/factions). */
-.faction-grid{grid-template-columns:repeat(5,1fr)}
-.faction-art{background-size:cover!important;background-position:center 20%!important;height:120px}
-.faction[data-faction=valmir] .faction-art{background-image:linear-gradient(0deg,#10231f 0%,transparent 45%),url('../assets/factions/valmir.webp')!important}
-.faction[data-faction=veymar] .faction-art{background-image:linear-gradient(0deg,#10231f 0%,transparent 45%),url('../assets/factions/veymar.webp')!important}
-.faction[data-faction=durn] .faction-art{background-image:linear-gradient(0deg,#10231f 0%,transparent 45%),url('../assets/factions/durn.webp')!important}
-.faction[data-faction=kragg] .faction-art{background-image:linear-gradient(0deg,#10231f 0%,transparent 45%),url('../assets/factions/kragg.webp')!important}
-.faction[data-faction=salinos] .faction-art{background-image:linear-gradient(0deg,#10231f 0%,transparent 45%),url('../assets/factions/salinos.webp')!important}
-@media(max-width:620px){.faction-grid{grid-template-columns:repeat(3,1fr)}.faction-art{height:90px}}
+/* Tela inicial (lobby): paisagem do povo escolhido ao fundo, brasões das cinco raças,
+   arte grande do povo e um botão "Jogar". Opções da partida ficam recolhidas. */
+.lobby {
+  position: relative;
+  min-height: 100%;
+  overflow: auto;
+  background: #0b1214;
+  color: #eee6cd;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
+}
+
+.lobby-bg {
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #0b1214e6 0%, #0b121499 35%, #0b1214f2 85%),
+    var(--land) center / cover no-repeat;
+  filter: saturate(1.1);
+}
+
+.lobby-brand,
+.lobby-main {
+  position: relative;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.lobby-brand {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.lobby-brand h1 {
+  margin: 0;
+  font: 700 clamp(38px, 9vw, 72px) / 1 Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.14em;
+  color: #f6e2a4;
+  text-shadow: 0 2px 0 #6b4e22, 0 8px 30px #000;
+}
+
+.lobby-brand p {
+  margin: 6px 0 0;
+  color: #c9c3ad;
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Brasões */
+.lobby-crests {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px 0 16px;
+}
+
+.lobby .lobby-crest {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: #a9b0a2;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lobby-crest i {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid #ffffff22;
+  background: var(--crest) center / 130% no-repeat, #121b1d;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.lobby-crest.on i {
+  border-color: #f0d48e;
+  transform: scale(1.12);
+  box-shadow: 0 0 18px #f0d48e55;
+}
+
+.lobby-crest.on span {
+  color: #f6e2a4;
+}
+
+/* Povo escolhido */
+.lobby-hero {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 18px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 20px;
+  background: #0e1719cc;
+  border: 1px solid #f0d48e33;
+}
+
+.lobby-art {
+  aspect-ratio: 5 / 4;
+  border-radius: 14px;
+  background: var(--art) center top / cover no-repeat;
+  box-shadow: inset 0 -40px 40px #0e1719;
+}
+
+.lobby-info h2 {
+  margin: 0;
+  font: 700 30px Georgia, serif;
+  color: #f6e2a4;
+}
+
+.lobby-motto {
+  margin: 4px 0 10px;
+  color: #f0d48e;
+  font-style: italic;
+}
+
+.lobby-desc {
+  margin: 0 0 12px;
+  color: #d4d0c0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.lobby-lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.lobby-lists h3 {
+  margin: 0 0 4px;
+  font: 600 11px system-ui;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9fb0a3;
+}
+
+.lobby-lists ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Ações */
+.lobby-actions {
+  display: grid;
+  gap: 10px;
+  margin: 18px auto 0;
+  max-width: 420px;
+}
+
+.lobby .lobby-play {
+  padding: 16px;
+  border-radius: 999px;
+  font-size: 20px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.lobby-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.lobby-row button {
+  padding: 10px 6px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.lobby-opts {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #0e1719ee;
+  border: 1px solid #f0d48e22;
+}
+
+.lobby-opts .match-fields {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  border: 0;
+  padding: 0;
+}
+
+.lobby .setup-error {
+  min-height: 16px;
+  margin: 0;
+  text-align: center;
+  color: #e9b18b;
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .lobby-hero {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .lobby-art {
+    aspect-ratio: 16 / 10;
+  }
+
+  .lobby-info h2 {
+    font-size: 24px;
+  }
+
+  .lobby-crest i {
+    width: 48px;
+    height: 48px;
+  }
+
+  .lobby-crests {
+    gap: 6px;
+  }
+
+  .lobby .lobby-crest span {
+    font-size: 9px;
+  }
+
+  .lobby-opts .match-fields {
+    grid-template-columns: 1fr;
+  }
+}
